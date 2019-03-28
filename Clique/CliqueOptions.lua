@@ -104,15 +104,15 @@ function Clique:OptionsOnLoad()
 	local containerFunc = function(button)
 		if IsShiftKeyDown() and CliqueCustomArg1 then
 			if CliqueCustomArg1:HasFocus() then
-				CliqueCustomArg1:Insert(GetContainerItemLink(button:GetParent():GetID(), button:GetID()))
+				CliqueCustomArg1:Insert(GetContainerItemLink(this:GetParent():GetID(), this:GetID()))
 			elseif CliqueCustomArg2:HasFocus() then
-				CliqueCustomArg2:Insert(GetContainerItemLink(button:GetParent():GetID(), button:GetID()))
+				CliqueCustomArg2:Insert(GetContainerItemLink(this:GetParent():GetID(), this:GetID()))
 			elseif CliqueCustomArg3:HasFocus() then
-				CliqueCustomArg3:Insert(GetContainerItemLink(button:GetParent():GetID(), button:GetID()))
+				CliqueCustomArg3:Insert(GetContainerItemLink(this:GetParent():GetID(), this:GetID()))
 			elseif CliqueCustomArg4:HasFocus() then
-				CliqueCustomArg4:Insert(GetContainerItemLink(button:GetParent():GetID(), button:GetID()))
+				CliqueCustomArg4:Insert(GetContainerItemLink(this:GetParent():GetID(), this:GetID()))
 			elseif CliqueCustomArg5:HasFocus() then
-				CliqueCustomArg5:Insert(GetContainerItemLink(button:GetParent():GetID(), button:GetID()))
+				CliqueCustomArg5:Insert(GetContainerItemLink(this:GetParent():GetID(), this:GetID()))
 			end
 		end
 	end
@@ -123,15 +123,15 @@ function Clique:OptionsOnLoad()
 	local bankFunc = function(button)
 		if IsShiftKeyDown() and CliqueCustomArg1 then
 			if CliqueCustomArg1:HasFocus() then
-				CliqueCustomArg1:Insert(GetContainerItemLink(BANK_CONTAINER, button:GetID()))
+				CliqueCustomArg1:Insert(GetContainerItemLink(BANK_CONTAINER, this:GetID()))
 			elseif CliqueCustomArg2:HasFocus() then
-				CliqueCustomArg2:Insert(GetContainerItemLink(BANK_CONTAINER, button:GetID()))
+				CliqueCustomArg2:Insert(GetContainerItemLink(BANK_CONTAINER, this:GetID()))
 			elseif CliqueCustomArg3:HasFocus() then
-				CliqueCustomArg3:Insert(GetContainerItemLink(BANK_CONTAINER, button:GetID()))
+				CliqueCustomArg3:Insert(GetContainerItemLink(BANK_CONTAINER, this:GetID()))
 			elseif CliqueCustomArg4:HasFocus() then
-				CliqueCustomArg4:Insert(GetContainerItemLink(BANK_CONTAINER, button:GetID()))
+				CliqueCustomArg4:Insert(GetContainerItemLink(BANK_CONTAINER, this:GetID()))
 			elseif CliqueCustomArg5:HasFocus() then
-				CliqueCustomArg5:Insert(GetContainerItemLink(BANK_CONTAINER, button:GetID()))
+				CliqueCustomArg5:Insert(GetContainerItemLink(BANK_CONTAINER, this:GetID()))
 			end
 		end
 	end
@@ -142,15 +142,15 @@ function Clique:OptionsOnLoad()
 	local dollFunc = function(button)
 		if IsShiftKeyDown() and CliqueCustomArg1 then
 			if CliqueCustomArg1:HasFocus() then
-				CliqueCustomArg1:Insert(GetInventoryItemLink("player", button:GetID()))
+				CliqueCustomArg1:Insert(GetInventoryItemLink("player", this:GetID()))
 			elseif CliqueCustomArg2:HasFocus() then
-				CliqueCustomArg2:Insert(GetInventoryItemLink("player", button:GetID()))
+				CliqueCustomArg2:Insert(GetInventoryItemLink("player", this:GetID()))
 			elseif CliqueCustomArg3:HasFocus() then
-				CliqueCustomArg3:Insert(GetInventoryItemLink("player", button:GetID()))
+				CliqueCustomArg3:Insert(GetInventoryItemLink("player", this:GetID()))
 			elseif CliqueCustomArg4:HasFocus() then
-				CliqueCustomArg4:Insert(GetInventoryItemLink("player", button:GetID()))
+				CliqueCustomArg4:Insert(GetInventoryItemLink("player", this:GetID()))
 			elseif CliqueCustomArg5:HasFocus() then
-				CliqueCustomArg5:Insert(GetInventoryItemLink("player", button:GetID()))
+				CliqueCustomArg5:Insert(GetInventoryItemLink("player", this:GetID()))
 			end
 		end
 	end
