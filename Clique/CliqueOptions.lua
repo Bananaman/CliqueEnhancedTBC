@@ -42,7 +42,7 @@ function Clique:OptionsOnLoad()
         self.spellbuttons[i] = button
     end
 
-    CreateFrame("CheckButton", "CliquePulloutTab", SpellButton1, "SpellBookSkillLineTabTemplate")
+    CreateFrame("CheckButton", "CliquePulloutTab", SpellBookFrame, "SpellBookSkillLineTabTemplate")
     CliquePulloutTab:SetNormalTexture("Interface\\AddOns\\Clique\\Images\\CliqueIcon")
     CliquePulloutTab:SetScript("OnClick", function() Clique:Toggle() end)
     CliquePulloutTab:SetScript("OnEnter", function() local i = 1 end)
