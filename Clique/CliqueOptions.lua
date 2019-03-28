@@ -598,7 +598,7 @@ function Clique:CreateOptionsFrame()
     button:SetPoint("LEFT", CliqueButtonSetProfile, "RIGHT", 3, 0)
     button:SetScript("OnClick", buttonFunc)
 
-    local frame = CreateFrame("FramE", "CliqueOptionsFrame", CliqueFrame)
+    local frame = CreateFrame("Frame", "CliqueOptionsFrame", CliqueFrame)
     frame:SetHeight(200)
     frame:SetWidth(300)
     frame:SetPoint("CENTER", 0, 0)
@@ -1370,7 +1370,12 @@ function Clique:ButtonOnClick(button)
     Clique:ListScrollUpdate()
 end
 
-local click_func = function(self) Clique:DropDown_OnClick(self) end
+local click_func = function()
+    local listButton = this
+    if listButton then
+        Clique:DropDown_OnClick(listButton)
+    end
+end
 
 function Clique:DropDown_Initialize()
     local info = {}
@@ -1384,9 +1389,9 @@ function Clique:DropDown_Initialize()
 	end
 end
 
-function Clique:DropDown_OnClick(frame)
-	UIDropDownMenu_SetSelectedValue(CliqueDropDown, frame.value)
-	Clique.editSet = frame.value
+function Clique:DropDown_OnClick(listButton)
+	UIDropDownMenu_SetSelectedValue(CliqueDropDown, listButton.value)
+	Clique.editSet = listButton.value
 	self.listSelected = 0
 	Clique:ListScrollUpdate()
 end
@@ -1399,7 +1404,7 @@ function Clique:DropDown_OnShow(frame)
 	table.sort(work)
 
 	UIDropDownMenu_Initialize(frame, function() Clique:DropDown_Initialize() end);
-	UIDropDownMenu_SetSelectedValue(CliqueDropDown, self.editSet)
+	UIDropDownMenu_SetSelectedValue(frame, self.editSet)
 	Clique:ListScrollUpdate()
 end
 
