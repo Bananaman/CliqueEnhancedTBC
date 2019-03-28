@@ -1,0 +1,14 @@
+tag r143-release
+d63a6e8c72bf669497b9d51bbfd64aec1be3e075
+James Whitehead II <jnwhiteh@gmail.com>
+2010-09-21 11:08:56 +0100
+
+Convert "r143-release" to proper git tag.
+
+
+--------------------
+
+James Whitehead II:
+	- Tagging r143-release
+	- Added an option to trigger spellcast on the down portion of a click
+	This option can be found in the Clique UI, under the 'options' panel.  When this option is active, any buttons that register for click-casting will be registered for 'AnyDown', which will cause spells to trigger on the down portion of the click.  By default, Clique continues to function as usual, triggering spellcasts on the up portion of a click.
