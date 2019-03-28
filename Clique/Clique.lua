@@ -263,7 +263,7 @@ function Clique:RegisterFrame(frame)
     -- Register AnyUp or AnyDown on this frame, depending on configuration
     self:SetClickType(frame)
 
-	if frame:CanChangeAttribute() or frame:CanChangeProtectedState() then
+	if frame:CanChangeProtectedState() then
 		if InCombatLockdown() then
 			self:ApplyClickSet(L.CLICKSET_DEFAULT, frame)
 			self:ApplyClickSet(L.CLICKSET_HELPFUL, frame)
