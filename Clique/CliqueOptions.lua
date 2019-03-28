@@ -262,7 +262,7 @@ function Clique:CreateOptionsFrame()
     local frames = {}
     self.frames = frames
     
-    local frame = CreateFrame("Frame", "CliqueFrame", CliquePulloutTab)
+    local frame = CreateFrame("Frame", "CliqueFrame", SpellBookFrame)
     frame:SetHeight(415)
     frame:SetWidth(400)
     frame:SetPoint("LEFT", SpellBookFrame, "RIGHT", 15, 30)
