@@ -66,7 +66,6 @@ function Clique:Enable()
 	self:RegisterEvent("PLAYER_REGEN_DISABLED")
 
 	self:RegisterEvent("LEARNED_SPELL_IN_TAB")
-    self:RegisterEvent("ADDON_LOADED")
 
 	self:UpdateClicks()
 
@@ -105,11 +104,6 @@ function Clique:Enable()
 
 	-- Place the Clique tab
 	self:LEARNED_SPELL_IN_TAB()
-
-    -- Register the arena frames, if they're already loaded
-    if IsAddOnLoaded("Blizzard_ArenaUI") then
-        self:EnableArenaFrames()
-    end
 end
 
 function Clique:EnableFrames()
@@ -709,25 +703,5 @@ function Clique:SetClickType(frame)
                 frame:RegisterForClicks(clickType)
             end
         end
-    end
-end
-
-function Clique:EnableArenaFrames()
-    local arenaFrames = {
-        ArenaEnemyFrame1,
-        ArenaEnemyFrame2,
-        ArenaEnemyFrame3,
-        ArenaEnemyFrame4,
-        ArenaEnemyFrame5,
-    }
-
-    for idx,frame in ipairs(arenaFrames) do
-        rawset(self.ccframes, frame, true)
-    end
-end
-
-function Clique:ADDON_LOADED(event, addon)
-    if addon == "Blizzard_ArenaUI" then
-        self:EnableArenaFrames()
     end
 end
