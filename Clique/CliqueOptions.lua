@@ -1606,7 +1606,7 @@ StaticPopupDialogs["CLIQUE_BINDING_PROBLEM"] = {
 }
 
 StaticPopupDialogs["CLIQUE_COMBAT_LOCKDOWN"] = {
-	text = "You are currently in combat.  You cannot make changes to your click casting while in combat..",
+	text = "You are currently in combat.  You cannot make changes to your click casting while in combat.",
 	button1 = TEXT(OKAY),
 	OnAccept = function()
 	end,
@@ -1618,9 +1618,8 @@ StaticPopupDialogs["CLIQUE_NEW_PROFILE"] = {
 	text = TEXT("Enter the name of a new profile you'd like to create"),
 	button1 = TEXT(OKAY),
 	button2 = TEXT(CANCEL),
-	OnAccept = function(self)
-		local base = self:GetName()
-		local editbox = getglobal(base .. "EditBox")
+	OnAccept = function()
+		local editbox = getglobal(this:GetParent():GetName().."EditBox")
 		Clique.db:SetProfile(editbox:GetText())
 	end,
 	timeout = 0,
@@ -1630,33 +1629,33 @@ StaticPopupDialogs["CLIQUE_NEW_PROFILE"] = {
 	hideOnEscape = 1,
 	hasEditBox = 1,
 	maxLetters = 32,
-	OnShow = function(self)
-		getglobal(self:GetName().."Button1"):Disable();
-		getglobal(self:GetName().."EditBox"):SetFocus();
+	OnShow = function()
+		getglobal(this:GetName().."Button1"):Disable();
+		getglobal(this:GetName().."EditBox"):SetFocus();
 	end,
-	OnHide = function(self)
+	OnHide = function()
 		if ( ChatFrameEditBox:IsVisible() ) then
 			ChatFrameEditBox:SetFocus();
 		end
-		getglobal(self:GetName().."EditBox"):SetText("");
+		getglobal(this:GetName().."EditBox"):SetText("");
 	end,
-	EditBoxOnEnterPressed = function(self)
-		if ( getglobal(self:GetParent():GetName().."Button1"):IsEnabled() == 1 ) then
-			Clique.db:SetProfile(self:GetText())
-			self:GetParent():Hide();
+	EditBoxOnEnterPressed = function()
+		if ( getglobal(this:GetParent():GetName().."Button1"):IsEnabled() == 1 ) then
+			Clique.db:SetProfile(this:GetText())
+			this:GetParent():Hide();
 		end
 	end,
-	EditBoxOnTextChanged = function (self)
-		local editBox = getglobal(self:GetParent():GetName().."EditBox");
+	EditBoxOnTextChanged = function ()
+		local editBox = getglobal(this:GetParent():GetName().."EditBox");
 		local txt = editBox:GetText()
 		if #txt > 0 then
-			getglobal(self:GetParent():GetName().."Button1"):Enable();
+			getglobal(this:GetParent():GetName().."Button1"):Enable();
 		else
-			getglobal(self:GetParent():GetName().."Button1"):Disable();
+			getglobal(this:GetParent():GetName().."Button1"):Disable();
 		end
 	end,
-	EditBoxOnEscapePressed = function(self)
-		self:GetParent():Hide();
+	EditBoxOnEscapePressed = function()
+		this:GetParent():Hide();
 		ClearCursor();
 	end
 }
@@ -1665,8 +1664,8 @@ StaticPopupDialogs["CLIQUE_DELETE_PROFILE"] = {
 	text = TEXT("Enter the name of a profile you'd like to delete"),
 	button1 = TEXT(OKAY),
 	button2 = TEXT(CANCEL),
-	OnAccept = function(self)
-		Clique.db:DeleteProfile(getglobal(self:GetName().."EditBox"):GetText())
+	OnAccept = function()
+		Clique.db:DeleteProfile(getglobal(this:GetName().."EditBox"):GetText())
 		Clique:DropDownProfile_OnShow()
 	end,
 	timeout = 0,
@@ -1676,34 +1675,34 @@ StaticPopupDialogs["CLIQUE_DELETE_PROFILE"] = {
 	hideOnEscape = 1,
 	hasEditBox = 1,
 	maxLetters = 32,
-	OnShow = function(self)
-		getglobal(self:GetName().."Button1"):Disable();
-		getglobal(self:GetName().."EditBox"):SetFocus();
+	OnShow = function()
+		getglobal(this:GetName().."Button1"):Disable();
+		getglobal(this:GetName().."EditBox"):SetFocus();
 	end,
-	OnHide = function(self)
+	OnHide = function()
 		if ( ChatFrameEditBox:IsVisible() ) then
 			ChatFrameEditBox:SetFocus();
 		end
-		getglobal(self:GetName().."EditBox"):SetText("");
+		getglobal(this:GetName().."EditBox"):SetText("");
 	end,
-	EditBoxOnEnterPressed = function(self)
-		if ( getglobal(self:GetParent():GetName().."Button1"):IsEnabled() == 1 ) then
-			Clique.db:DeleteProfile(self:GetText())
+	EditBoxOnEnterPressed = function()
+		if ( getglobal(this:GetParent():GetName().."Button1"):IsEnabled() == 1 ) then
+			Clique.db:DeleteProfile(this:GetText())
 			Clique:DropDownProfile_OnShow()
-			self:GetParent():Hide();
+			this:GetParent():Hide();
 		end
 	end,
-	EditBoxOnTextChanged = function (self)
-		local editBox = getglobal(self:GetParent():GetName().."EditBox");
+	EditBoxOnTextChanged = function ()
+		local editBox = getglobal(this:GetParent():GetName().."EditBox");
 		local txt = editBox:GetText()
 		if Clique.db.profiles[txt] then
-			getglobal(self:GetParent():GetName().."Button1"):Enable();
+			getglobal(this:GetParent():GetName().."Button1"):Enable();
 		else
-			getglobal(self:GetParent():GetName().."Button1"):Disable();
+			getglobal(this:GetParent():GetName().."Button1"):Disable();
 		end
 	end,
-	EditBoxOnEscapePressed = function(self)
-		self:GetParent():Hide();
+	EditBoxOnEscapePressed = function()
+		this:GetParent():Hide();
 		ClearCursor();
 	end
 }
