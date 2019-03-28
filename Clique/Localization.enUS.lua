@@ -116,9 +116,6 @@ if GetLocale() then
     L.EDIT = "Edit"
 
     L["Clique Options"] = "Clique Options"
-    L["Primary:"] = "Primary:"
-    L["Secondary:"] = "Secondary:"
     L.DOWNCLICK_LABEL = "Trigger clicks on the 'down' portion of the click"
-    L.SPECSWITCH_LABEL = "Change profile when switching talent specs"
 end
 

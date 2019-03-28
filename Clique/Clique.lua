@@ -29,7 +29,6 @@ function Clique:Enable()
 			tooltips = false,
 		},
         char = {
-            switchSpec = false,
             downClick = false,
         },
 	}
@@ -67,20 +66,7 @@ function Clique:Enable()
 	self:RegisterEvent("PLAYER_REGEN_DISABLED")
 
 	self:RegisterEvent("LEARNED_SPELL_IN_TAB")
-    self:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
     self:RegisterEvent("ADDON_LOADED")
-
-    -- Change to correct profile based on talent spec
-    if self.db.char.switchSpec then
-        self.silentProfile = true
-        self.talentGroup = GetActiveTalentGroup()
-        if self.talentGroup == 1 and self.db.char.primaryProfile then
-            self.db:SetProfile(self.db.char.primaryProfile)
-        elseif self.talentGroup == 2 and self.db.char.secondaryProfile then
-            self.db:SetProfile(self.db.char.secondaryProfile)
-        end
-        self.silentProfile = false
-    end
 
 	self:UpdateClicks()
 
@@ -328,9 +314,7 @@ end
 
 function Clique:DONGLE_PROFILE_CHANGED(event, db, parent, svname, profileKey)
 	if db == self.db then
-        if not self.silentProfile then
-            self:PrintF(L.PROFILE_CHANGED, profileKey)
-        end
+		self:PrintF(L.PROFILE_CHANGED, profileKey)
 
 		for name,set in pairs(self.clicksets) do
 			self:RemoveClickSet(set)
@@ -710,20 +694,6 @@ function Clique:ShowBindings()
 	end
 
 	CliqueTooltip:Show()
-end
-
-function Clique:ACTIVE_TALENT_GROUP_CHANGED(event, newGroup, prevGroup)
-    if self.db.char.switchSpec then
-        self:Print("Detected a talent spec change, changing profile")
-        if newGroup == 1 and self.db.char.primaryProfile then
-            self.db:SetProfile(self.db.char.primaryProfile)
-        elseif newGroup == 2 and self.db.char.secondaryProfile then
-            self.db:SetProfile(self.db.char.secondaryProfile)
-        end
-        if CliqueFrame then
-            CliqueFrame.title:SetText("Clique v. " .. Clique.version .. " - " .. tostring(Clique.db.keys.profile));
-        end
-    end
 end
 
 function Clique:SetClickType(frame)

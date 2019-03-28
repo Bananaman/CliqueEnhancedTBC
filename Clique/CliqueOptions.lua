@@ -1857,123 +1857,12 @@ function Clique:CreateOptionsWidgets(parent)
     local downClick = makeCheckbox(parent, "CliqueOptionsAnyDown", L.DOWNCLICK_LABEL, 300)
     downClick:SetPoint("TOPLEFT", 5, -25)
 
-    local switchSpec = makeCheckbox(parent, "CliqueOptionsSpecSwitch", L.SPECSWITCH_LABEL, 300)
-    switchSpec:SetPoint("TOPLEFT", 5, -45)
-
-    local priDropdown = CreateFrame("Frame", "CliquePriSpecDropDown", parent, "UIDropDownMenuTemplate")
-    priDropdown:ClearAllPoints()
-    priDropdown:SetPoint("TOPLEFT", switchSpec, "BOTTOMLEFT", 65, 0)
-    priDropdown:Show()
-    priDropdown.label = priDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    priDropdown.label:SetText(L["Primary:"])
-    priDropdown.label:SetPoint("RIGHT", priDropdown, "LEFT", 0, 0)
-    priDropdown.label:SetHeight(16)
-
-    local function initialize(self, level)
-        local function OnClick(self)
-            UIDropDownMenu_SetSelectedID(priDropdown, self:GetID())
-            Clique.db.char.primaryProfile = self.value
-            Clique:UpdateClicks()
-        end
-
-        local work = {}
-        for k,v in pairs(Clique.db.profiles) do 
-            table.insert(work, k)
-        end
-		table.sort(work) 
-
-        for idx,profile in ipairs(work) do
-            local info = UIDropDownMenu_CreateInfo()
-            info.text = profile
-            info.func = OnClick
-            info.value = profile
-            UIDropDownMenu_AddButton(info, level)
-        end
-    end
-
-    UIDropDownMenu_Initialize(priDropdown, initialize)
-    UIDropDownMenu_SetWidth(priDropdown, 175);
-    UIDropDownMenu_SetButtonWidth(priDropdown, 199)
-    UIDropDownMenu_JustifyText(priDropdown, "LEFT")
-    if Clique.db.char.primaryProfile then
-        UIDropDownMenu_SetSelectedValue(priDropdown, Clique.db.char.primaryProfile)
-    else
-        UIDropDownMenu_SetSelectedValue(priDropdown, Clique.db.keys.profile)
-    end
-
-    local secDropdown = CreateFrame("Frame", "CliqueSecSpecDropDown", parent, "UIDropDownMenuTemplate")
-    secDropdown:ClearAllPoints()
-    secDropdown:SetPoint("TOPLEFT", priDropdown, "BOTTOMLEFT", 0, 0)
-    secDropdown:Show()
-    secDropdown.label = secDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    secDropdown.label:SetText(L["Secondary:"])
-    secDropdown.label:SetPoint("RIGHT", secDropdown, "LEFT", 0, 0)
-    secDropdown.label:SetHeight(16)
-
-    local function initialize(self, level)
-        local function OnClick(self)
-            UIDropDownMenu_SetSelectedID(secDropdown, self:GetID())
-            Clique.db.char.secondaryProfile = self.value
-            Clique:UpdateClicks()
-        end
-
-        local work = {}
-        for k,v in pairs(Clique.db.profiles) do 
-            table.insert(work, k)
-        end
-		table.sort(work) 
-
-        for idx,profile in ipairs(work) do
-            local info = UIDropDownMenu_CreateInfo()
-            info.text = profile
-            info.func = OnClick
-            info.value = profile
-            UIDropDownMenu_AddButton(info, level)
-        end
-    end
-
-    UIDropDownMenu_Initialize(secDropdown, initialize)
-    UIDropDownMenu_SetWidth(secDropdown, 175);
-    UIDropDownMenu_SetButtonWidth(secDropdown, 199)
-    UIDropDownMenu_JustifyText(secDropdown, "LEFT")
-    if Clique.db.char.secondaryProfile then
-        UIDropDownMenu_SetSelectedValue(secDropdown, Clique.db.char.secondaryProfile)
-    else
-        UIDropDownMenu_SetSelectedValue(secDropdown, Clique.db.keys.profile)
-    end
-
     local function refreshOptions(self)
-        -- Hide the dropdowns if the spec switch option isn't selected
-        local switchSpec = Clique.db.char.switchSpec
         local downClick = Clique.db.char.downClick
-        CliqueOptionsSpecSwitch:SetChecked(switchSpec)
         CliqueOptionsAnyDown:SetChecked(downClick)
-
-        if switchSpec then
-            CliquePriSpecDropDown:Show()
-            CliqueSecSpecDropDown:Show()
-            if not Clique.db.char.primaryProfile then
-                Clique.db.char.primaryProfile = Clique.db.keys.profile
-            end
-            if not Clique.db.char.secondaryProfile then
-                Clique.db.char.secondaryProfile = Clique.db.keys.profile
-            end
-        else
-            CliquePriSpecDropDown:Hide()
-            CliqueSecSpecDropDown:Hide()
-        end
     end
 
     parent:SetScript("OnShow", refreshOptions)
-    switchSpec:SetScript("OnClick", function(self)
-        if Clique.db.char.switchSpec then
-            Clique.db.char.switchSpec = false
-        else
-            Clique.db.char.switchSpec = true
-        end
-        refreshOptions(parent)
-        Clique:UpdateClicks()
-    end)
     downClick:SetScript("OnClick", function(self)
         if Clique.db.char.downClick then
             Clique.db.char.downClick = false
