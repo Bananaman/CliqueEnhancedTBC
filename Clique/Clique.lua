@@ -119,13 +119,7 @@ function Clique:EnableFrames()
 		PartyMemberFrame3PetFrame,
 		PartyMemberFrame4PetFrame,
 		TargetFrame,
-		TargetFrameToT,
-		FocusFrame,
-        FocusFrameToT,
-        Boss1TargetFrame,
-        Boss2TargetFrame,
-        Boss3TargetFrame,
-        Boss4TargetFrame,
+		TargetofTargetFrame,
     }
     
     for i,frame in pairs(tbl) do
