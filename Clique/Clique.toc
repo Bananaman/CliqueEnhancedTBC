@@ -1,7 +1,9 @@
-## Interface: 30300 
-## Title: Clique
+## Interface: 20400
+## Title: Clique Enhanced (TBC)
+## Version: TBC-143-1
 ## Author: Cladhaire
-## Version: wowi:revision
+## X-Additional-Authors: VideoPlayerCode (TBC Backporting & Enhancements)
+## X-Website: https://github.com/VideoPlayerCode/CliqueEnhancedTBC
 ## Notes: Simply powerful click-casting interface
 ## SavedVariables: CliqueDB
 ## OptionalDeps: Dongle
