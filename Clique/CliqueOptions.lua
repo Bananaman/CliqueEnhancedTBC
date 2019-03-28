@@ -376,7 +376,7 @@ function Clique:CreateOptionsFrame()
     local update = function() Clique:ListScrollUpdate() end
 
 	CliqueListScroll:SetScript("OnVerticalScroll", update, function(self, offset)
-		FauxScrollFrame_OnVerticalScroll(self, offset, ENTRY_SIZE, update)
+		FauxScrollFrame_OnVerticalScroll(ENTRY_SIZE, update)
 	end)
 
     CliqueListScroll:SetScript("OnShow", update)
@@ -495,7 +495,7 @@ function Clique:CreateOptionsFrame()
 	end
 
     CliqueTextListScroll:SetScript("OnVerticalScroll", function(self, offset)
-		FauxScrollFrame_OnVerticalScroll(self, offset, 22, update) 
+		FauxScrollFrame_OnVerticalScroll(22, update) 
 	end)
     CliqueTextListFrame:SetScript("OnShow", update)
 	CliqueTextListFrame:Hide()
@@ -988,7 +988,7 @@ function Clique:CreateOptionsFrame()
 
 	CliqueIconScrollFrame:SetScript("OnVerticalScroll", function(self, offset)
 		local MACRO_ICON_ROW_HEIGHT = 36
-		FauxScrollFrame_OnVerticalScroll(self, offset, MACRO_ICON_ROW_HEIGHT, updateicons)
+		FauxScrollFrame_OnVerticalScroll(MACRO_ICON_ROW_HEIGHT, updateicons)
 	end)
 
 	CliqueIconSelectFrame:SetScript("OnShow", function(self)
