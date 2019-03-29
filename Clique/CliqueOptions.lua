@@ -239,8 +239,11 @@ function Clique:SkinFrame(frame)
 	frame.header:SetPoint("BOTTOMRIGHT", frame.headerRight, "BOTTOMLEFT");
 		
 	frame.title = frame.titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall");
-	frame.title:SetWidth(200); frame.title:SetHeight(16);
-	frame.title:SetPoint("TOP", 0, -2);
+	frame.title:SetHeight(16);
+	frame.title:SetPoint("TOPLEFT", 32, -2); -- NOTE: "32" ensures we don't overlap close-buttons.
+	frame.title:SetPoint("TOPRIGHT", -32, -2);
+	frame.title:SetJustifyH("CENTER");
+	frame.title:SetJustifyV("MIDDLE");
 		
 	frame.footerLeft = frame:CreateTexture(nil, "ARTWORK");
 	frame.footerLeft:SetTexture("Interface\\AddOns\\Clique\\images\\footCorner.tga");
