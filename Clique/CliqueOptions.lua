@@ -84,7 +84,7 @@ function Clique:OptionsOnLoad()
     end)
 	CliquePulloutTab:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
-		GameTooltip:SetText("Clique configuration")
+		GameTooltip:SetText("Clique Configuration")
 		GameTooltip:Show()
 	end)
    
@@ -1132,7 +1132,7 @@ function Clique:FillListEntry(frame, idx)
 	elseif entry.type == "menu" then
 		frame.name:SetText("Show Menu")
 	elseif entry.type == "stop" then
-		frame.name:SetText("Cancel Pending Spell")
+		frame.name:SetText("Stop Casting Current Spell")
 	elseif entry.type == "target" then
 		frame.name:SetText(string.format("Target Unit: %s", arg1 and entry.arg1 or ""))
 	elseif entry.type == "focus" then
