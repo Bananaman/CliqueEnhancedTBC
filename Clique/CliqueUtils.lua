@@ -2,7 +2,10 @@ local buttonMap = setmetatable({
     [1] = "LeftButton",
     [2] = "RightButton",
     [3] = "MiddleButton",
+    [4] = "Button4",
+    [5] = "Button5",
 }, {
+    -- Handles any future, missing key lookups, such as "6" = "Button6", etc...
     __index = function(t, k)
         return "Button" .. k
     end

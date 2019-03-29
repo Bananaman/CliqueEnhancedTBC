@@ -688,6 +688,7 @@ function Clique:ShowBindings()
 end
 
 function Clique:SetClickType(frame)
+    -- NOTE: RegisterForClicks overwrites the previous registration, thus ensuring only one click-type is active.
     local clickType = Clique.db.char.downClick and "AnyDown" or "AnyUp"
     if frame then
         frame:RegisterForClicks(clickType)
