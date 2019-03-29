@@ -29,14 +29,15 @@ function Clique:OptionsOnLoad()
         button:RegisterForClicks("AnyUp")
         button:SetAllPoints(parent)
         button:SetScript("OnClick", onclick)
+        local highlightTexture = button:GetHighlightTexture()
         button:SetScript("OnEnter", function(self)
-			local parent = self:GetParent()
             if parent:IsEnabled() == 1 then
+                highlightTexture:Show()
                 SpellButton_OnEnter(parent)
             else
-                button:GetHighlightTexture():Hide()
+                highlightTexture:Hide()
             end
-		end)
+        end)
         button:SetScript("OnLeave", onleave)
 
 		button:Hide()
