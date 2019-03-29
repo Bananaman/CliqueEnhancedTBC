@@ -262,6 +262,11 @@ function Clique:SkinFrame(frame)
 	frame.footer:SetPoint("BOTTOMRIGHT", frame.footerRight, "BOTTOMLEFT");
 end
 
+function Clique:UpdateOptionsTitle()
+    if (not CliqueFrame) or (not CliqueFrame.title) then return end
+    CliqueFrame.title:SetText("Clique Enhanced v. " .. Clique.version .. " - " .. tostring(Clique.db.keys.profile));
+end
+
 function Clique:CreateOptionsFrame()
     local frames = {}
     self.frames = frames
@@ -272,7 +277,6 @@ function Clique:CreateOptionsFrame()
     frame:SetPoint("LEFT", SpellBookFrame, "RIGHT", 15, 30)
 	self:SkinFrame(frame)
 	frame:SetToplevel(true)
-	frame.title:SetText("Clique v. " .. Clique.version .. " - " .. tostring(Clique.db.keys.profile));
 
 	frame:SetScript("OnShow", function(self) 
 		if InCombatLockdown() then
@@ -281,7 +285,7 @@ function Clique:CreateOptionsFrame()
 		end
 		local parent = self:GetParent()
 		self:SetFrameLevel(parent:GetFrameLevel() + 5)
-		frame.title:SetText("Clique v. " .. Clique.version .. " - " .. tostring(Clique.db.keys.profile));
+		Clique:UpdateOptionsTitle()
 		Clique:ToggleSpellBookButtons()
 	end)
 

@@ -7,6 +7,7 @@ Clique = {Locals = {}}
 assert(DongleStub, string.format("Clique requires DongleStub."))
 DongleStub("Dongle-1.2"):New("Clique", Clique)
 Clique.version = GetAddOnMetadata("Clique", "Version")
+if Clique.version then Clique.version = strtrim(Clique.version) end
 if Clique.version == "wowi:revision" then Clique.version = "SVN" end
 
 local L = Clique.Locals
@@ -327,6 +328,11 @@ function Clique:DONGLE_PROFILE_CHANGED(event, db, parent, svname, profileKey)
 		self:UpdateClicks()
 
 		self:PLAYER_REGEN_ENABLED()
+
+		-- Ensure Clique window title shows the new profile name
+		if self.UpdateOptionsTitle then
+			self:UpdateOptionsTitle()
+		end
 	end
 end
 
