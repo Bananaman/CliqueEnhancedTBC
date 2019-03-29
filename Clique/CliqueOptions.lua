@@ -1225,7 +1225,10 @@ function Clique:ButtonOnClick(button)
 	    local offset = FauxScrollFrame_GetOffset(CliqueTextListScroll)
 		local selected = self.textlistSelected - offset
 		local button = getglobal("CliqueTextList"..selected)
-		self.db:SetProfile(button.name:GetText())
+		local profileName = button.name:GetText()
+		if (profileName and profileName:len() > 0) then
+			self.db:SetProfile(profileName)
+		end
 	elseif button == CliqueButtonNewProfile then
 		StaticPopup_Show("CLIQUE_NEW_PROFILE")
 	elseif button == CliqueButtonDeleteProfile then
@@ -1626,7 +1629,10 @@ StaticPopupDialogs["CLIQUE_NEW_PROFILE"] = {
 	button2 = TEXT(CANCEL),
 	OnAccept = function()
 		local editbox = getglobal(this:GetParent():GetName().."EditBox")
-		Clique.db:SetProfile(editbox:GetText())
+		local profileName = editbox:GetText()
+		if (profileName and profileName:len() > 0) then
+			Clique.db:SetProfile(profileName)
+		end
 	end,
 	timeout = 0,
 	whileDead = 1,
@@ -1647,7 +1653,10 @@ StaticPopupDialogs["CLIQUE_NEW_PROFILE"] = {
 	end,
 	EditBoxOnEnterPressed = function()
 		if ( getglobal(this:GetParent():GetName().."Button1"):IsEnabled() == 1 ) then
-			Clique.db:SetProfile(this:GetText())
+			local profileName = this:GetText()
+			if (profileName and profileName:len() > 0) then
+				Clique.db:SetProfile(profileName)
+			end
 			this:GetParent():Hide();
 		end
 	end,
