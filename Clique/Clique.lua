@@ -199,6 +199,14 @@ function Clique:PLAYER_REGEN_DISABLED()
 	self:ApplyClickSet(L.CLICKSET_HELPFUL)
 end
 
+local function wipe(t) -- Emulates "table.wipe".
+    for k in pairs(t) do
+        t[k] = nil
+    end
+
+    return t
+end
+
 function Clique:UpdateClicks()
 	local ooc = self.clicksets[L.CLICKSET_OOC]
 	local harm = self.clicksets[L.CLICKSET_HARMFUL]
@@ -210,7 +218,7 @@ function Clique:UpdateClicks()
     -- set (which we build here) which contains only those help/harm
     -- buttons that don't conflict with those defined in OOC.
 
-    self.ooc = table.wipe(self.ooc or {})
+    self.ooc = wipe(self.ooc or {})
 
     -- Create a hash map of the "taken" combinations
     local takenBinds = {}
