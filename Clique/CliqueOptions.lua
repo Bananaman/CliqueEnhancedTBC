@@ -273,22 +273,15 @@ function Clique:CreateOptionsFrame()
 	self:SkinFrame(frame)
 	frame:SetToplevel(true)
 	frame.title:SetText("Clique v. " .. Clique.version .. " - " .. tostring(Clique.db.keys.profile));
-	frame:SetScript("OnShow", function()
-        frame.title:SetText("Clique v. " .. Clique.version .. " - " .. tostring(Clique.db.keys.profile));
-		if Clique.inuse then
-			CliqueHelpText:Hide()
-		else
-			CliqueHelpText:Show()
-		end
-	end)
 
-	CliqueFrame:SetScript("OnShow", function(self) 
+	frame:SetScript("OnShow", function(self) 
 		if InCombatLockdown() then
 			Clique:Toggle()
 			return
 		end
 		local parent = self:GetParent()
 		self:SetFrameLevel(parent:GetFrameLevel() + 5)
+		frame.title:SetText("Clique v. " .. Clique.version .. " - " .. tostring(Clique.db.keys.profile));
 		Clique:ToggleSpellBookButtons()
 	end)
 
@@ -1021,6 +1014,7 @@ function Clique:CreateOptionsFrame()
 end
 
 function Clique:ListScrollUpdate()
+    Clique:ValidateButtons()
 	if not CliqueListScroll then return end
 
     local idx,button
@@ -1050,7 +1044,6 @@ function Clique:ListScrollUpdate()
             button:Hide()
         end
     end
-    Clique:ValidateButtons()
 end
 
 local sortFunc = function(a,b)
@@ -1073,6 +1066,8 @@ function Clique:SortList()
 end
 
 function Clique:ValidateButtons()
+    if not CliqueButtonDelete then return end
+
     local entry = self.sortList[self.listSelected]
     
     if entry then
@@ -1379,7 +1374,6 @@ function Clique:ButtonOnClick(button)
 		self:ButtonOnClick(CliqueCustomButtonCancel)
 	end
     
-    Clique:ValidateButtons()
     Clique:ListScrollUpdate()
 end
 
