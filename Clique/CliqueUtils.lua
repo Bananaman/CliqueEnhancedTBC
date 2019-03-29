@@ -1,3 +1,5 @@
+local pairs = pairs
+
 local buttonMap = setmetatable({
     [1] = "LeftButton",
     [2] = "RightButton",

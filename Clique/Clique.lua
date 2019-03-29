@@ -11,6 +11,9 @@ if Clique.version == "wowi:revision" then Clique.version = "SVN" end
 
 local L = Clique.Locals
 
+local pairs = pairs
+local ipairs = ipairs
+
 function Clique:Enable()
 	-- Grab the localisation header
 	L = Clique.Locals

@@ -29,9 +29,12 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------]]
 local major = "DongleStub"
-local minor = tonumber(string.match("$Revision: 313 $", "(%d+)") or 1)
+local minor = tonumber(string.match("$Revision: 314 $", "(%d+)") or 1)
 
 local g = getfenv(0)
+
+local pairs = g.pairs
+local ipairs = g.ipairs
 
 if not g.DongleStub or g.DongleStub:IsNewerVersion(major, minor) then
 	local lib = setmetatable({}, {

@@ -6,6 +6,7 @@ local TEXT = genv.TEXT
 local OKAY = genv.OKAY
 local CANCEL = genv.CANCEL
 local GameTooltip = genv.GameTooltip
+local pairs = genv.pairs
 
 local NUM_ENTRIES = 10
 local ENTRY_SIZE = 35
@@ -405,7 +406,7 @@ function Clique:CreateOptionsFrame()
 			local frame = getglobal(name)
 			if button:GetChecked() then
 				self.profile.blacklist[name] = nil
-				self:RegisterFrame(getglobal(name))
+				self:RegisterFrame(frame)
 			else
 				self:UnregisterFrame(frame)
 				self.profile.blacklist[name] = true
