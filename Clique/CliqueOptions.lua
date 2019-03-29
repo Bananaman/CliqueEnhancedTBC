@@ -612,6 +612,12 @@ function Clique:CreateOptionsFrame()
     frame:Hide()
     self:CreateOptionsWidgets(frame)
 
+    frame:SetScript("OnShow", function(self)
+        local parent = self:GetParent()
+        self:SetFrameLevel(parent:GetFrameLevel() + 5)
+        self:refreshOptionsWidgets()
+    end)
+
 	self.customEntry = {}    
     local frame = CreateFrame("Frame", "CliqueCustomFrame", CliqueFrame)
     frame:SetHeight(400)
@@ -1874,19 +1880,18 @@ function Clique:CreateOptionsWidgets(parent)
     local downClick = makeCheckbox(parent, "CliqueOptionsAnyDown", L.DOWNCLICK_LABEL, 300)
     downClick:SetPoint("TOPLEFT", 5, -25)
 
-    local function refreshOptions(self)
+    parent.refreshOptionsWidgets = function(self)
         local downClick = Clique.db.char.downClick
         CliqueOptionsAnyDown:SetChecked(downClick)
     end
 
-    parent:SetScript("OnShow", refreshOptions)
     downClick:SetScript("OnClick", function(self)
         if Clique.db.char.downClick then
             Clique.db.char.downClick = false
         else
             Clique.db.char.downClick = true
         end
-        refreshOptions(parent)
+        parent:refreshOptionsWidgets()
         Clique:SetClickType()
     end)
 end
