@@ -1890,18 +1890,25 @@ function Clique:CreateOptionsWidgets(parent)
     local downClick = makeCheckbox(parent, "CliqueOptionsAnyDown", L.DOWNCLICK_LABEL, 300)
     downClick:SetPoint("TOPLEFT", 5, -25)
 
+    local easterEgg = makeCheckbox(parent, "CliqueOptionsEasterEgg", L.EASTEREGG_LABEL, 300)
+    easterEgg:SetPoint("TOPLEFT", 5, -45)
+
     parent.refreshOptionsWidgets = function(self)
         local downClick = Clique.db.char.downClick
+        local easterEgg = Clique.db.char.easterEgg
         CliqueOptionsAnyDown:SetChecked(downClick)
+        CliqueOptionsEasterEgg:SetChecked(easterEgg)
     end
 
     downClick:SetScript("OnClick", function(self)
-        if Clique.db.char.downClick then
-            Clique.db.char.downClick = false
-        else
-            Clique.db.char.downClick = true
-        end
+        Clique.db.char.downClick = not Clique.db.char.downClick
         parent:refreshOptionsWidgets()
         Clique:SetClickType() -- Refresh click-registrations for ALL frames.
+    end)
+
+    easterEgg:SetScript("OnClick", function(self)
+        Clique.db.char.easterEgg = not Clique.db.char.easterEgg
+        parent:refreshOptionsWidgets()
+        Clique:Print(Clique.db.char.easterEgg and L.EASTEREGG_MSG1 or L.EASTEREGG_MSG2)
     end)
 end

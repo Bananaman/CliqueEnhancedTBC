@@ -34,6 +34,7 @@ function Clique:Enable()
 		},
         char = {
             downClick = false,
+            easterEgg = false,
         },
 	}
 	
