@@ -46,6 +46,7 @@ if GetLocale() then
 	L.CANNOT_CHANGE_COMBAT    = "Cannot make changes in combat.  These changes will be delayed until you exit combat."
 	L.APPLY_QUEUE             = "Out of combat.  Applying all queued changes."
 	L.PROFILE_CHANGED         = "Profile has changed to '%s'."
+	L.PROFILE_COPIED          = "Profile '%s' has been copied into your current profile."
 	L.PROFILE_DELETED         = "Profile '%s' has been deleted."
 	L.PROFILE_RESET         = "Your profile '%s' has been reset."
 

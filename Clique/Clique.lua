@@ -21,6 +21,7 @@ function Clique:Enable()
 	self.ooc = {}
 
 	self.defaults = {
+		-- Profile: Values which are shared by all characters that use a specific profile.
 		profile = {
 			clicksets = {
 				[L.CLICKSET_DEFAULT] = {},
@@ -32,6 +33,7 @@ function Clique:Enable()
 			},
 			tooltips = false,
 		},
+        -- Char: Values which are independently stored per-character, regardless of which profile each character uses.
         char = {
             downClick = false,
             easterEgg = false,
@@ -98,6 +100,7 @@ function Clique:Enable()
 
 	-- Register for dongle events
 	self:RegisterMessage("DONGLE_PROFILE_CHANGED")
+	self:RegisterMessage("DONGLE_PROFILE_COPIED")
 	self:RegisterMessage("DONGLE_PROFILE_DELETED")
 	self:RegisterMessage("DONGLE_PROFILE_RESET")
 
@@ -352,55 +355,52 @@ function Clique:UnregisterFrame(frame)
 	self:SetClickType(frame)
 end
 
+local function applyCurrentProfile()
+    -- Remove existing click bindings.
+    for name,set in pairs(Clique.clicksets) do
+        Clique:RemoveClickSet(set)
+    end
+    Clique:RemoveClickSet(Clique.ooc)
+
+    -- Update our database profile links.
+    Clique.profile = Clique.db.profile
+    Clique.clicksets = Clique.profile.clicksets
+    Clique.editSet = Clique.clicksets[L.CLICKSET_DEFAULT]
+    Clique.profileKey = profileKey
+
+    -- Refresh the profile editor if it exists.
+    Clique.textlistSelected = nil
+    Clique:TextListScrollUpdate()
+    Clique:ListScrollUpdate()
+
+    -- Update and apply the clickset.
+    Clique:UpdateClicks()
+    Clique:PLAYER_REGEN_ENABLED()
+end
+
 function Clique:DONGLE_PROFILE_CHANGED(event, db, parent, svname, profileKey)
 	if db == self.db then
 		self:PrintF(L.PROFILE_CHANGED, profileKey)
+		applyCurrentProfile()
 
-		for name,set in pairs(self.clicksets) do
-			self:RemoveClickSet(set)
-		end
-		self:RemoveClickSet(self.ooc)
-
-		self.profile = self.db.profile
-		self.clicksets = self.profile.clicksets
-		self.editSet = self.clicksets[L.CLICKSET_DEFAULT]
-		self.profileKey = profileKey
-	
-		-- Refresh the profile editor if it exists
-		self.textlistSelected = nil
-		self:TextListScrollUpdate()
-		self:ListScrollUpdate()
-		self:UpdateClicks()
-
-		self:PLAYER_REGEN_ENABLED()
-
-		-- Ensure Clique window title shows the new profile name
+		-- Ensure Clique window title shows the new profile name.
 		if self.UpdateOptionsTitle then
 			self:UpdateOptionsTitle()
 		end
 	end
 end
 
+function Clique:DONGLE_PROFILE_COPIED(event, db, parent, svname, copiedFrom, profileKey)
+	if db == self.db then
+		self:PrintF(L.PROFILE_COPIED, copiedFrom)
+		applyCurrentProfile()
+	end
+end
+
 function Clique:DONGLE_PROFILE_RESET(event, db, parent, svname, profileKey)
 	if db == self.db then
-		for name,set in pairs(self.clicksets) do
-			self:RemoveClickSet(set)
-		end
-		self:RemoveClickSet(self.ooc)
-
-		self.profile = self.db.profile
-		self.clicksets = self.profile.clicksets
-		self.editSet = self.clicksets[L.CLICKSET_DEFAULT]
-		self.profileKey = profileKey
-	
-		-- Refresh the profile editor if it exists
-		self.textlistSelected = nil
-		self:TextListScrollUpdate()
-		self:ListScrollUpdate()
-		self:UpdateClicks()
-
-		self:PLAYER_REGEN_ENABLED()
-		self:Print(L.PROFILE_RESET, profileKey)
+		self:PrintF(L.PROFILE_RESET, profileKey)
+		applyCurrentProfile()
 	end
 end
 
@@ -409,6 +409,7 @@ function Clique:DONGLE_PROFILE_DELETED(event, db, parent, svname, profileKey)
 	if db == self.db then
 		self:PrintF(L.PROFILE_DELETED, profileKey)
 	
+		-- Our ACTIVE profile can never be deleted, so we only have to update the profile list window.
 		self.textlistSelected = nil
 		self:TextListScrollUpdate()
 		self:ListScrollUpdate()
