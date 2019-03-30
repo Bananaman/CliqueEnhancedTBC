@@ -110,7 +110,7 @@ function Clique:Enable()
     -- Securehook CreateFrame to catch any new raid frames
     local raidFunc = function(type, name, parent, template)
 		if template == "RaidPulloutButtonTemplate" then
-			local btn = getglobal(name.."ClearButton");
+			local btn = _G[name.."ClearButton"]
 			if btn then
 				self:RegisterFrame(btn)
 			end
@@ -509,7 +509,7 @@ function Clique:SetAttribute(entry, frame)
 		end
 	elseif entry.type == "click" then
 		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-		frame:SetAttribute(entry.modifier.."clickbutton"..button, getglobal(entry.arg1))
+		frame:SetAttribute(entry.modifier.."clickbutton"..button, _G[entry.arg1])
 	elseif entry.type == "menu" then
 		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
 	end

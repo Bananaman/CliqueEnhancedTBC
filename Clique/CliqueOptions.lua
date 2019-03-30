@@ -22,7 +22,7 @@ function Clique:OptionsOnLoad()
     end
 
     for i=1,12 do
-        local parent = getglobal("SpellButton"..i)
+        local parent = _G["SpellButton"..i]
         local button = CreateFrame("Button", "SpellButtonCliqueCover"..i, parent)
         button:SetID(parent:GetID())
         button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")
@@ -358,7 +358,7 @@ function Clique:CreateOptionsFrame()
         frames[i]:SetPoint("TOP", frames[i-1], "BOTTOM", 0, 2)
     end
     
-    local endButton = getglobal("CliqueList"..NUM_ENTRIES)
+    local endButton = _G["CliqueList"..NUM_ENTRIES]
     CreateFrame("ScrollFrame", "CliqueListScroll", CliqueListFrame, "FauxScrollFrameTemplate")
     CliqueListScroll:SetPoint("TOPLEFT", CliqueList1, "TOPLEFT", 0, 0)
     CliqueListScroll:SetPoint("BOTTOMRIGHT", endButton, "BOTTOMRIGHT", 0, 0)
@@ -404,7 +404,7 @@ function Clique:CreateOptionsFrame()
 		end
 		if self.textlist == "FRAMES" then
 			local name = button.realValue
-			local frame = getglobal(name)
+			local frame = _G[name]
 			if button:GetChecked() then
 				self.profile.blacklist[name] = nil
 				self:RegisterFrame(frame)
@@ -698,7 +698,7 @@ function Clique:CreateOptionsFrame()
 	end
 
 	local entry = buttons[1]
-	local button = getglobal("CliqueRadioButton"..entry.type)
+	local button = _G["CliqueRadioButton"..entry.type]
 	button.type = entry.type
 	button.name:SetText(entry.name)
 	button:SetPoint("TOPLEFT", 5, -30)	
@@ -710,7 +710,7 @@ function Clique:CreateOptionsFrame()
 	for i=2,#buttons do
 		local entry = buttons[i]
 		local name = "CliqueRadioButton"..entry.type
-		local button = getglobal(name)
+		local button = _G[name]
 	
 		button.type = entry.type
 		button.name:SetText(entry.name)
@@ -1036,7 +1036,7 @@ function Clique:ListScrollUpdate()
 	
     for i=1,NUM_ENTRIES do
         idx = offset + i
-        button = getglobal("CliqueList"..i)
+        button = _G["CliqueList"..i]
         if idx <= table.getn(clickCasts) then
             Clique:FillListEntry(button,idx)
             button:Show()
@@ -1233,7 +1233,7 @@ function Clique:ButtonOnClick(button)
 	elseif button == CliqueButtonSetProfile then
 	    local offset = FauxScrollFrame_GetOffset(CliqueTextListScroll)
 		local selected = self.textlistSelected - offset
-		local button = getglobal("CliqueTextList"..selected)
+		local button = _G["CliqueTextList"..selected]
 		local profileName = button.realValue
 		if (profileName and profileName:len() > 0) then
 			self.db:SetProfile(profileName)
@@ -1243,7 +1243,7 @@ function Clique:ButtonOnClick(button)
 	elseif button == CliqueButtonDeleteProfile then
 	    local offset = FauxScrollFrame_GetOffset(CliqueTextListScroll)
 		local selected = self.textlistSelected - offset
-		local button = getglobal("CliqueTextList"..selected)
+		local button = _G["CliqueTextList"..selected]
 		self.db:DeleteProfile(button.realValue)
 	elseif button == CliqueButtonEdit then
 		-- Make a copy of the entry
@@ -1567,8 +1567,8 @@ function Clique:UpdateIconFrame()
 
     -- Icon list
     for i=1, NUM_MACRO_ICONS_SHOWN do
-        macroPopupIcon = getglobal("CliqueIcon"..i.."Icon");
-        macroPopupButton = getglobal("CliqueIcon"..i);
+        macroPopupIcon = _G["CliqueIcon"..i.."Icon"];
+        macroPopupButton = _G["CliqueIcon"..i];
         
         if not macroPopupButton.icon then
             macroPopupButton.icon = macroPopupIcon
@@ -1636,7 +1636,7 @@ StaticPopupDialogs["CLIQUE_NEW_PROFILE"] = {
 	button1 = TEXT(OKAY),
 	button2 = TEXT(CANCEL),
 	OnAccept = function()
-		local editbox = getglobal(this:GetParent():GetName().."EditBox")
+		local editbox = _G[this:GetParent():GetName().."EditBox"]
 		local profileName = editbox:GetText()
 		if (profileName and profileName:len() > 0) then
 			Clique.db:SetProfile(profileName)
@@ -1650,17 +1650,17 @@ StaticPopupDialogs["CLIQUE_NEW_PROFILE"] = {
 	hasEditBox = 1,
 	maxLetters = 32,
 	OnShow = function()
-		getglobal(this:GetName().."Button1"):Disable();
-		getglobal(this:GetName().."EditBox"):SetFocus();
+		_G[this:GetName().."Button1"]:Disable();
+		_G[this:GetName().."EditBox"]:SetFocus();
 	end,
 	OnHide = function()
 		if ( ChatFrameEditBox:IsVisible() ) then
 			ChatFrameEditBox:SetFocus();
 		end
-		getglobal(this:GetName().."EditBox"):SetText("");
+		_G[this:GetName().."EditBox"]:SetText("");
 	end,
 	EditBoxOnEnterPressed = function()
-		if ( getglobal(this:GetParent():GetName().."Button1"):IsEnabled() == 1 ) then
+		if ( _G[this:GetParent():GetName().."Button1"]:IsEnabled() == 1 ) then
 			local profileName = this:GetText()
 			if (profileName and profileName:len() > 0) then
 				Clique.db:SetProfile(profileName)
@@ -1669,12 +1669,12 @@ StaticPopupDialogs["CLIQUE_NEW_PROFILE"] = {
 		end
 	end,
 	EditBoxOnTextChanged = function ()
-		local editBox = getglobal(this:GetParent():GetName().."EditBox");
+		local editBox = _G[this:GetParent():GetName().."EditBox"];
 		local txt = editBox:GetText()
 		if #txt > 0 then
-			getglobal(this:GetParent():GetName().."Button1"):Enable();
+			_G[this:GetParent():GetName().."Button1"]:Enable();
 		else
-			getglobal(this:GetParent():GetName().."Button1"):Disable();
+			_G[this:GetParent():GetName().."Button1"]:Disable();
 		end
 	end,
 	EditBoxOnEscapePressed = function()
@@ -1688,7 +1688,7 @@ StaticPopupDialogs["CLIQUE_DELETE_PROFILE"] = {
 	button1 = TEXT(OKAY),
 	button2 = TEXT(CANCEL),
 	OnAccept = function()
-		Clique.db:DeleteProfile(getglobal(this:GetName().."EditBox"):GetText())
+		Clique.db:DeleteProfile(_G[this:GetName().."EditBox"]:GetText())
 		Clique:DropDownProfile_OnShow()
 	end,
 	timeout = 0,
@@ -1699,29 +1699,29 @@ StaticPopupDialogs["CLIQUE_DELETE_PROFILE"] = {
 	hasEditBox = 1,
 	maxLetters = 32,
 	OnShow = function()
-		getglobal(this:GetName().."Button1"):Disable();
-		getglobal(this:GetName().."EditBox"):SetFocus();
+		_G[this:GetName().."Button1"]:Disable();
+		_G[this:GetName().."EditBox"]:SetFocus();
 	end,
 	OnHide = function()
 		if ( ChatFrameEditBox:IsVisible() ) then
 			ChatFrameEditBox:SetFocus();
 		end
-		getglobal(this:GetName().."EditBox"):SetText("");
+		_G[this:GetName().."EditBox"]:SetText("");
 	end,
 	EditBoxOnEnterPressed = function()
-		if ( getglobal(this:GetParent():GetName().."Button1"):IsEnabled() == 1 ) then
+		if ( _G[this:GetParent():GetName().."Button1"]:IsEnabled() == 1 ) then
 			Clique.db:DeleteProfile(this:GetText())
 			Clique:DropDownProfile_OnShow()
 			this:GetParent():Hide();
 		end
 	end,
 	EditBoxOnTextChanged = function ()
-		local editBox = getglobal(this:GetParent():GetName().."EditBox");
+		local editBox = _G[this:GetParent():GetName().."EditBox"];
 		local txt = editBox:GetText()
 		if Clique.db.profiles[txt] then
-			getglobal(this:GetParent():GetName().."Button1"):Enable();
+			_G[this:GetParent():GetName().."Button1"]:Enable();
 		else
-			getglobal(this:GetParent():GetName().."Button1"):Disable();
+			_G[this:GetParent():GetName().."Button1"]:Disable();
 		end
 	end,
 	EditBoxOnEscapePressed = function()
@@ -1772,7 +1772,7 @@ function Clique:TextListScrollUpdate()
     local buttonText
     for i=1,12 do
         idx = offset + i
-        button = getglobal("CliqueTextList"..i)
+        button = _G["CliqueTextList"..i]
         if idx <= #work then
             button.realValue = work[idx]
             buttonText = button.realValue
@@ -1811,7 +1811,7 @@ function Clique:TextListScrollUpdate()
 				button:SetChecked(true)
 			elseif self.textlist == "FRAMES" then
 				local name = work[idx]
-				local frame = getglobal(name)
+				local frame = _G[name]
 
 				if not self.profile.blacklist then 
 					self.profile.blacklist = {}

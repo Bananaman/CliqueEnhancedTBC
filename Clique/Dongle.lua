@@ -894,10 +894,10 @@ local function initdb(parent, name, defaults, defaultProfile, olddb)
 	-- This allows us to use an arbitrary table as base instead of saved variable name
 	local sv
 	if type(name) == "string" then
-		sv = getglobal(name)
+		sv = _G[name]
 		if not sv then
 			sv = {}
-			setglobal(name, sv)
+			_G[name] = sv
 		end
 	elseif type(name) == "table" then
 		sv = name
