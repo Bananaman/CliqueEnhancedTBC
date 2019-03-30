@@ -43,22 +43,56 @@ function Clique:Enable()
 
     self.editSet = self.clicksets[L.CLICKSET_DEFAULT]
 
-	ClickCastFrames = ClickCastFrames or {}
-	self.ccframes = ClickCastFrames
+    -- "ClickCastFrames" is global to allow easy access by other addons (for adding their own custom unit frames). Therefore,
+    -- we'll import that table (if it already exists) and use its existing contents as the basis of our real, internal frame-table.
+    -- NOTE: For safety, we re-use the EXACT SAME table, since other addons MAY have stored a local reference to the global table,
+    -- and we'll want to ensure that any further additions/modifications by them to their table reference are detected by us.
+    self.ccframes = _G.ClickCastFrames or {}
 
+    -- This metatable function will be used on both the global "ClickCastFrames" table AND the real, internal "ccframes" table.
+    -- It automatically registers or unregisters frames when someone tries to directly set a NON-EXISTENT key to a truthy/falsy value.
+    -- NOTE: Since we never save the key to the fresh-and-empty "ClickCastFrames" (created further below), this function is ALWAYS
+    -- executed when assigning/modifying values on ANY key on the new GLOBAL table. However, if someone has stored a LOCAL reference
+    -- to the OLD global table (aka "ccframes") and they modify some EXISTING key, then we CAN'T react since "new index" isn't called.
     local newindex = function(t,k,v)
-		if v == nil then
-			Clique:UnregisterFrame(k)
-			rawset(self.ccframes, k, nil)
-		else
-			Clique:RegisterFrame(k)
-			rawset(self.ccframes, k, v)
-		end
+        if not v then
+            Clique:UnregisterFrame(k)
+            -- If they're trying to set an entry to nil it means they're actually trying to DELETE the frame info entirely (not merely
+            -- set it to true (enabled) or false (disabled). In that case, remove it, and refresh the "frame editor"-window.
+            if v == nil then
+                rawset(self.ccframes, k, nil)
+                if CliqueTextListFrame and self.textlist == "FRAMES" and CliqueTextListFrame:IsVisible() then
+                    Clique:TextListScrollUpdate()
+                end
+            end
+        else
+            Clique:RegisterFrame(k)
+        end
     end
-    
-	ClickCastFrames = setmetatable({}, {__newindex=newindex})
+
+    -- This step is ONLY necessary if someone has stored a local reference; then they'll be pointing directly at "ccframes" and we'll
+    -- want to properly react (and register) new frames if they attempt to ADD a value to their own local table reference.
+    -- NOTE: This WON'T react (update registration) if they are MODIFYING *any* existing value. There's NOTHING we can do about that!
+    setmetatable(self.ccframes, { __newindex = newindex })
+
+    -- Lastly, create a brand new, empty global "ClickCastFrames" table, which will NEVER write any entries to itself. Thus ensuring
+    -- that EVERY attempt to set/modify a value on this global table will call the "new index" function, and properly (un-)register...
+    _G.ClickCastFrames = setmetatable({}, {
+        __newindex = newindex,
+        __index = function(t,k)
+            -- If a caller attempts to look up (read) an index, return the same index from the real, internal table.
+            return self.ccframes[k]
+        end
+    })
 
     Clique:OptionsOnLoad()
+
+    -- Register any frames that were added to the global table by other addons before Clique was loaded.
+    for frame in pairs(self.ccframes) do
+        self:RegisterFrame(frame)
+    end
+
+    -- Register all default Blizzard unitframes.
     Clique:EnableFrames()
 
 	-- Register for dongle events
@@ -73,15 +107,13 @@ function Clique:Enable()
 
 	self:UpdateClicks()
 
-    -- Register all frames that snuck in before we did =)
-    for frame in pairs(self.ccframes) do
-		self:RegisterFrame(frame)
-    end
-
     -- Securehook CreateFrame to catch any new raid frames
     local raidFunc = function(type, name, parent, template)
 		if template == "RaidPulloutButtonTemplate" then
-			ClickCastFrames[getglobal(name.."ClearButton")] = true
+			local btn = getglobal(name.."ClearButton");
+			if btn then
+				self:RegisterFrame(btn)
+			end
 		end
 	end
 
@@ -127,7 +159,7 @@ function Clique:EnableFrames()
     }
     
     for i,frame in pairs(tbl) do
-		rawset(self.ccframes, frame, true)
+        self:RegisterFrame(frame)
     end
 end	   
 
@@ -243,20 +275,23 @@ end
 function Clique:RegisterFrame(frame)
 	local name = frame:GetName()
 
-	if self.profile.blacklist[name] then 
-		rawset(self.ccframes, frame, false)
+	if name and self.profile.blacklist[name] then 
+		self:UnregisterFrame(frame) -- We don't allow registration (enabling) of blacklisted frames!
+		if CliqueTextListFrame and self.textlist == "FRAMES" and CliqueTextListFrame:IsVisible() then
+			Clique:TextListScrollUpdate()
+		end
 		return 
 	end
 
-	if not ClickCastFrames[frame] then 
+	if not self.ccframes[frame] then 
 		rawset(self.ccframes, frame, true)
-		if CliqueTextListFrame then
+		if CliqueTextListFrame and self.textlist == "FRAMES" and CliqueTextListFrame:IsVisible() then
 			Clique:TextListScrollUpdate()
 		end
 	end
 
-    -- Register AnyUp or AnyDown on this frame, depending on configuration
-    self:SetClickType(frame)
+	-- Register "AnyUp" or "AnyDown" on this frame, depending on configuration.
+	self:SetClickType(frame)
 
 	if frame:CanChangeProtectedState() then
 		if InCombatLockdown() then
@@ -300,11 +335,20 @@ end
 
 function Clique:UnregisterFrame(frame)
 	assert(not InCombatLockdown(), "An addon attempted to unregister a frame from Clique while in combat.")
+
+	rawset(self.ccframes, frame, false) -- Important: Remember the given frame with a "false" value, to ensure it exists in ccframes.
+	if CliqueTextListFrame and self.textlist == "FRAMES" and CliqueTextListFrame:IsVisible() then
+		Clique:TextListScrollUpdate()
+	end
+
 	for name,set in pairs(self.clicksets) do
 		for modifier,entry in pairs(set) do
 			self:DeleteAttribute(entry, frame)
 		end
 	end
+
+	-- Restore normal "AnyUp" handler on this frame.
+	self:SetClickType(frame)
 end
 
 function Clique:DONGLE_PROFILE_CHANGED(event, db, parent, svname, profileKey)
@@ -372,10 +416,6 @@ end
 
 function Clique:SetAttribute(entry, frame)
 	local name = frame:GetName()
-
-	if	self.profile.blacklist and self.profile.blacklist[name] then
-		return
-	end
 
 	-- Set up any special attributes
 	local type,button,value
@@ -477,9 +517,6 @@ end
 
 function Clique:DeleteAttribute(entry, frame)
 	local name = frame:GetName()
-	if	self.profile.blacklist and self.profile.blacklist[name] then
-		return
-	end
 
 	local type,button,value
 
@@ -514,7 +551,9 @@ end
 function Clique:ShowAttributes()
 	self:Print("Enabled enhanced debugging.")
 	PlayerFrame:SetScript("OnAttributeChanged", function(...) self:Print(...) end)
+	self:Print("Unregistering:")
 	self:UnregisterFrame(PlayerFrame)
+	self:Print("Registering:")
 	self:RegisterFrame(PlayerFrame)
 end
 
@@ -700,11 +739,14 @@ function Clique:SetClickType(frame)
     -- NOTE: RegisterForClicks overwrites the previous registration, thus ensuring only one click-type is active.
     local clickType = Clique.db.char.downClick and "AnyDown" or "AnyUp"
     if frame then
+        if not self.ccframes[frame] then clickType = "AnyUp" end -- Restore normal "AnyUp" since we don't use this frame.
         frame:RegisterForClicks(clickType)
     else
         for frame, enabled in pairs(self.ccframes) do
             if enabled then
                 frame:RegisterForClicks(clickType)
+            else
+                frame:RegisterForClicks("AnyUp") -- Restore normal "AnyUp" since we don't use this frame.
             end
         end
     end

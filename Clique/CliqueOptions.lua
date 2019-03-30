@@ -403,14 +403,14 @@ function Clique:CreateOptionsFrame()
 			self.textlistSelected = offset + button.id
 		end
 		if self.textlist == "FRAMES" then
-			local name = button.name:GetText()
+			local name = button.realValue
 			local frame = getglobal(name)
 			if button:GetChecked() then
 				self.profile.blacklist[name] = nil
 				self:RegisterFrame(frame)
 			else
-				self:UnregisterFrame(frame)
 				self.profile.blacklist[name] = true
+				self:UnregisterFrame(frame)
 			end
 		end
         Clique:TextListScrollUpdate()
@@ -1234,7 +1234,7 @@ function Clique:ButtonOnClick(button)
 	    local offset = FauxScrollFrame_GetOffset(CliqueTextListScroll)
 		local selected = self.textlistSelected - offset
 		local button = getglobal("CliqueTextList"..selected)
-		local profileName = button.name:GetText()
+		local profileName = button.realValue
 		if (profileName and profileName:len() > 0) then
 			self.db:SetProfile(profileName)
 		end
@@ -1244,7 +1244,7 @@ function Clique:ButtonOnClick(button)
 	    local offset = FauxScrollFrame_GetOffset(CliqueTextListScroll)
 		local selected = self.textlistSelected - offset
 		local button = getglobal("CliqueTextList"..selected)
-		self.db:DeleteProfile(button.name:GetText())
+		self.db:DeleteProfile(button.realValue)
 	elseif button == CliqueButtonEdit then
 		-- Make a copy of the entry
 		self.customEntry = {}
@@ -1731,12 +1731,14 @@ StaticPopupDialogs["CLIQUE_DELETE_PROFILE"] = {
 }
 
 local work = {}
+local workDisabled = {}
 
 function Clique:TextListScrollUpdate()
 	if not CliqueTextListScroll then return end
 
     local idx,button
 	for k,v in pairs(work) do work[k] = nil end
+	for k,v in pairs(workDisabled) do workDisabled[k] = nil end
 
 	if not self.textlist then self.textlist = "FRAMES" end
 
@@ -1746,10 +1748,13 @@ function Clique:TextListScrollUpdate()
 		CliqueTextListFrame.title:SetText("Profile: " .. self.db.keys.profile)
 
 	elseif self.textlist == "FRAMES" then
-		for k,v in pairs(self.ccframes) do 
-			local name = k:GetName()
+		for frame,enabled in pairs(self.ccframes) do 
+			local name = frame:GetName()
 			if name then
 				table.insert(work, name)
+				if not enabled then
+					workDisabled[name] = true -- Signal that the added entry is a disabled one.
+				end
 			end
 		end
 		table.sort(work)
@@ -1764,11 +1769,17 @@ function Clique:TextListScrollUpdate()
         CliqueTextListFrame:SetWidth(275)
     end
 	
+    local buttonText
     for i=1,12 do
         idx = offset + i
         button = getglobal("CliqueTextList"..i)
         if idx <= #work then
-			button.name:SetText(work[idx])
+            button.realValue = work[idx]
+            buttonText = button.realValue
+            if workDisabled[buttonText] then
+                buttonText = buttonText.." (disabled)"
+            end
+            button.name:SetText(buttonText)
             button:Show()
 			-- Change texture
 			if self.textlist == "PROFILES" then
@@ -1807,7 +1818,7 @@ function Clique:TextListScrollUpdate()
 				end
 				local bl = self.profile.blacklist
 
-				if bl[name] then
+				if bl[name] or workDisabled[name] then
 					button:SetChecked(nil)
 				else
 					button:SetChecked(true)
@@ -1891,6 +1902,6 @@ function Clique:CreateOptionsWidgets(parent)
             Clique.db.char.downClick = true
         end
         parent:refreshOptionsWidgets()
-        Clique:SetClickType()
+        Clique:SetClickType() -- Refresh click-registrations for ALL frames.
     end)
 end
