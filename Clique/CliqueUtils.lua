@@ -1,4 +1,10 @@
-local pairs = pairs
+local IsAltKeyDown = IsAltKeyDown;
+local IsControlKeyDown = IsControlKeyDown;
+local IsShiftKeyDown = IsShiftKeyDown;
+local SecureButton_GetButtonSuffix = SecureButton_GetButtonSuffix;
+local pairs = pairs;
+local tonumber = tonumber;
+local type = type;
 
 local buttonMap = setmetatable({
     [1] = "LeftButton",
@@ -9,44 +15,73 @@ local buttonMap = setmetatable({
 }, {
     -- Handles any future, missing key lookups, such as "6" = "Button6", etc...
     __index = function(t, k)
-        return "Button" .. k
+        return "Button" .. k;
     end
 })
 
 function Clique:GetModifierText()
-    local modifier = ""
-    
-	if IsShiftKeyDown() then
-		modifier = "Shift-"..modifier
-	end
-	if IsControlKeyDown() then
-		modifier = "Ctrl-"..modifier
-	end
-	if IsAltKeyDown() then
-		modifier = "Alt-"..modifier
-	end
-    
-    return modifier
+    -- Based on the code of Blizzard's "SecureButton_GetModifierPrefix".
+    local modifier = "";
+
+    if (IsShiftKeyDown()) then
+        modifier = "Shift-"..modifier;
+    end
+    if (IsControlKeyDown()) then
+        modifier = "Ctrl-"..modifier;
+    end
+    if (IsAltKeyDown()) then
+        modifier = "Alt-"..modifier;
+    end
+
+    return modifier;
 end
 
+-- Converts a button label such as "LeftButton" to its numeric value (ie. 1).
+-- Returns an empty string on failure.
 function Clique:GetButtonNumber(button)
-    return SecureButton_GetButtonSuffix(button)
+    -- Sometimes Clique calls this function with input that's already a number/numeric string. In that case, we should
+    -- simply return the same input as-a-number, while also verifying that it's valid (number starting from 1 or higher).
+    local num, inputType;
+    inputType = type(button);
+    if (inputType == "string") then
+        button = button:gsub("^h[ea][lr][pm]button", ""); -- Removes any helpbutton/harmbutton prefix.
+        num = tonumber(button); -- Attempt to coerce string input into a number instead.
+    elseif (inputType == "number") then
+        num = button;
+    end
+    if (num) then -- Input was numeric or a numeric string (successfully converted into a number).
+        return (num >= 1) and num or ""; -- Discard negative results.
+    end
+
+    -- Call Blizzard's API which converts LeftButton="1", RightButton="2", MiddleButton="3", Button4="4", Button5="5",
+    -- and any invalid input into "-<input as tostring()>" (so asking for "Button6" would make it return "-Button6").
+    -- However, we DON'T want the result as string and we DON'T want the invalid (minus-prefixed) results. So we'll
+    -- simply pass everything through tonumber() which returns nil if it doesn't get a clean number/numeric string.
+    num = tonumber( ( SecureButton_GetButtonSuffix(button or "") ) ); -- NOTE: Double parenthesis to only keep 1st return value.
+    return (num and num >= 1) and num or ""; -- Discard negative results.
 end
 
+-- Converts a button number such as "1" to its human-readable label (ie. "LeftButton").
+-- Returns an empty string on failure.
 function Clique:GetButtonText(num)
-    if not num then return "" end
-	if type(num) == "string" then
-		num = num:gsub("helpbutton", "")
-		num = num:gsub("harmbutton", "")
-	end
-	num = tonumber(num) and tonumber(num) or num
-    return buttonMap[num] or ""
+    -- Attempt to coerce string input into a number instead.
+    if (type(num) == "string") then
+        -- NOTE: "tonumber" will never throw an error; it simply returns nil on invalid input.
+        -- NOTE: Double parenthesis are NECESSARY to throw away gsub's 2nd return value!
+        num = tonumber( ( num:gsub("^h[ea][lr][pm]button", "") ) ); -- Removes any helpbutton/harmbutton prefix.
+    end
+
+    -- If the result (or original input) wasn't a clean number, or is less than 1, we received invalid input.
+    if (type(num) ~= "number" or num < 1) then return ""; end
+
+    -- Convert the number to a button label. This ALWAYS succeeds since buttonMap generates "ButtonX" for any "unsupported" buttons.
+    return buttonMap[num];
 end
 
 function Clique:CheckBinding(key)
     for k,v in pairs(self.editSet) do
         if k == key then 
-            return v
+            return v;
         end
     end
 end
