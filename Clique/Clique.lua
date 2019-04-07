@@ -174,6 +174,12 @@ function Clique:EnableFrames()
 end	   
 
 function Clique:SpellBookButtonPressed(frame, button)
+    -- We can only make changes when out of combat, but our spellbook overlays are
+    -- hidden while in combat, so this function should never trigger in combat.
+    if InCombatLockdown() then
+        return
+    end
+
     local id = SpellBook_GetSpellID(this:GetParent():GetID());
     local texture = GetSpellTexture(id, SpellBookFrame.bookType)
     local name, rank = GetSpellName(id, SpellBookFrame.bookType)
@@ -192,6 +198,9 @@ function Clique:SpellBookButtonPressed(frame, button)
 	else
 		button = self:GetButtonNumber(button)
 	end
+
+    -- Skip this click if binding wasn't detected properly.
+    if button == "" then return; end
 
     -- Build the structure
     local t = {
