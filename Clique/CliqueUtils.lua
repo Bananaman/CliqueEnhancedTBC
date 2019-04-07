@@ -79,9 +79,5 @@ function Clique:GetButtonText(num)
 end
 
 function Clique:CheckBinding(key)
-    for k,v in pairs(self.editSet) do
-        if k == key then 
-            return v;
-        end
-    end
+    return key and self.editSet[key] -- Returns binding-data if "key" provided and exists in set, otherwise nil.
 end

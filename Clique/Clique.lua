@@ -211,12 +211,15 @@ function Clique:SpellBookButtonPressed(frame, button)
 		["arg1"] = name,
 		["arg2"] = rank,
     }
-    
-    local key = t.modifier .. t.button
+
+    -- Enforce string keys for CheckBinding purposes, which uses "type+value" equality to detect duplicates.
+    -- NOTE: Technically, t.modifier is always a string/empty string, so the result is always
+    -- a string even if "button" is numeric. But we want to be 100000% sure that it's a string!
+    local key = tostring(t.modifier .. t.button)
     
     if self:CheckBinding(key) then
 		StaticPopup_Show("CLIQUE_BINDING_PROBLEM")
-	return
+		return
     end
     
     self.editSet[key] = t
