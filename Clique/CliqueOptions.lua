@@ -49,10 +49,11 @@ function Clique:OptionsOnLoad()
     CliquePulloutTab:SetScript("OnClick", function() Clique:Toggle() end)
     CliquePulloutTab:SetScript("OnEnter", function() local i = 1 end)
     CliquePulloutTab:SetScript("OnShow", function()
-		Clique.inuse = nil
+		Clique.inuse = false
         for k,v in pairs(self.clicksets) do
-            if next(v) then
+            if next(v) then -- Contains elements.
                 Clique.inuse = true
+                break
             end
         end
         if not Clique.inuse then
@@ -1088,10 +1089,11 @@ function Clique:ValidateButtons()
     CliqueButtonOptions:Enable()
 
 	-- Disable the help text
-	Clique.inuse = nil
+	Clique.inuse = false
 	for k,v in pairs(self.clicksets) do
-		if next(v) then
+		if next(v) then -- Contains elements.
 			Clique.inuse = true
+			break
 		end
 	end
 	if Clique.inuse then
