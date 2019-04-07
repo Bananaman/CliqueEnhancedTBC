@@ -15,11 +15,17 @@ local L = Clique.Locals
 local pairs = pairs
 local ipairs = ipairs
 
+local isEnabled;
 function Clique:Enable()
-	-- Grab the localisation header
+	-- Only allow initialization ONCE per game session!
+	if isEnabled then return; end
+	isEnabled = true;
+
+	-- Grab the localisation table.
 	L = Clique.Locals
 	self.ooc = {}
 
+	-- Set up database.
 	self.defaults = {
 		-- Profile: Values which are shared by all characters that use a specific profile.
 		profile = {
