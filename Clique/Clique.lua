@@ -57,6 +57,9 @@ function Clique:Enable()
     -- We MUST build the ooc_clickset here, to ensure it gets applied to all subsequent frame registrations.
     self:RebuildOOCSet()
 
+    -- Queue of frame registrations/unregistrations that happened during combat lockdown.
+    self.incombat_registrations = {}
+
     -- "ClickCastFrames" is global to allow easy access by other addons (for adding their own custom unit frames). Therefore,
     -- we'll import that table (if it already exists) and use its existing contents as the basis of our real, internal frame-table.
     -- NOTE: For safety, we re-use the EXACT SAME table, since other addons MAY have stored a local reference to the global table,
@@ -248,6 +251,15 @@ end
 
 -- Player is LEAVING combat
 function Clique:PLAYER_REGEN_ENABLED()
+	for frame,registered in pairs(self.incombat_registrations) do
+		if registered then
+			self:RegisterFrame(frame)
+		else
+			self:UnregisterFrame(frame)
+		end
+		self.incombat_registrations[frame] = nil
+	end
+
 	self:UseOOCSet()
 end
 
@@ -341,7 +353,16 @@ function Clique:RebuildOOCSet()
 end
 
 function Clique:RegisterFrame(frame)
+	if (InCombatLockdown()) then
+		self.incombat_registrations[frame] = true -- Will register it after combat.
+		return
+	end
+
 	local name = frame:GetName()
+
+	if not frame:CanChangeProtectedState() then
+		error(string.format("Frame '%s' doesn't allow attribute modification, despite not being in combat.", name), 2) -- This should never happen.
+	end
 
 	if name and self.profile.blacklist[name] then 
 		self:UnregisterFrame(frame) -- We don't allow registration (enabling) of blacklisted frames!
@@ -361,13 +382,8 @@ function Clique:RegisterFrame(frame)
 	-- Register "AnyUp" or "AnyDown" on this frame, depending on configuration.
 	self:SetClickType(frame)
 
-	if frame:CanChangeProtectedState() then
-		if InCombatLockdown() then
-			self:UseCombatSet(frame)
-		else
-			self:UseOOCSet(frame)
-		end
-	end
+	-- Apply "out of combat" actions, since we aren't in combat.
+	self:UseOOCSet(frame)
 end
 
 function Clique:ApplyClickSet(name, frame)
@@ -399,7 +415,16 @@ function Clique:RemoveClickSet(name, frame)
 end
 
 function Clique:UnregisterFrame(frame)
-	assert(not InCombatLockdown(), "An addon attempted to unregister a frame from Clique while in combat.")
+	if (InCombatLockdown()) then
+		self.incombat_registrations[frame] = false -- Will unregister it after combat.
+		return
+	end
+
+	local name = frame:GetName()
+
+	if not frame:CanChangeProtectedState() then
+		error(string.format("Frame '%s' doesn't allow attribute modification, despite not being in combat.", name), 2) -- This should never happen.
+	end
 
 	rawset(self.ccframes, frame, false) -- Important: Remember the given frame with a "false" value, to ensure it exists in ccframes.
 	if CliqueTextListFrame and self.textlist == "FRAMES" and CliqueTextListFrame:IsVisible() then
