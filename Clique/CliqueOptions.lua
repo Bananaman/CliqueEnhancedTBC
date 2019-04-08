@@ -1180,7 +1180,7 @@ function Clique:ButtonOnClick(button)
         end
 	
 		self:DeleteAction(entry)
-		self:UpdateClicks()
+		self:RebuildOOCSet()
 		self:PLAYER_REGEN_ENABLED()
 		entry = nil
         
@@ -1370,13 +1370,13 @@ function Clique:ButtonOnClick(button)
 			local key = self.editEntry.modifier..self.editEntry.button
 			self.editSet[key] = nil
 			self:DeleteAction(self.editEntry)
-			self:UpdateClicks()
+			self:RebuildOOCSet()
 			self.editEntry = nil
 		end
 
 		local key = entry.modifier..entry.button
 		self.editSet[key] = entry
-		self:UpdateClicks()
+		self:RebuildOOCSet()
 		self:PLAYER_REGEN_ENABLED()
 		self:ButtonOnClick(CliqueCustomButtonCancel)
 	end

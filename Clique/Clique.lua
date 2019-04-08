@@ -23,7 +23,6 @@ function Clique:Enable()
 
 	-- Grab the localisation table.
 	L = Clique.Locals
-	self.ooc = {}
 
 	-- Set up database.
 	self.defaults = {
@@ -51,6 +50,12 @@ function Clique:Enable()
 	self.clicksets = self.profile.clicksets
 
     self.editSet = self.clicksets[L.CLICKSET_DEFAULT]
+
+    -- Dynamically built to hold all actions that will be registered while out of combat.
+    self.ooc_clickset = {}
+
+    -- We MUST build the ooc_clickset here, to ensure it gets applied to all subsequent frame registrations.
+    self:RebuildOOCSet()
 
     -- "ClickCastFrames" is global to allow easy access by other addons (for adding their own custom unit frames). Therefore,
     -- we'll import that table (if it already exists) and use its existing contents as the basis of our real, internal frame-table.
@@ -94,6 +99,7 @@ function Clique:Enable()
         end
     })
 
+    -- Generate the options GUI.
     Clique:OptionsOnLoad()
 
     -- Register any frames that were added to the global table by other addons before Clique was loaded.
@@ -104,18 +110,16 @@ function Clique:Enable()
     -- Register all default Blizzard unitframes.
     Clique:EnableFrames()
 
-	-- Register for dongle events
+	-- Register for dongle events.
 	self:RegisterMessage("DONGLE_PROFILE_CHANGED")
 	self:RegisterMessage("DONGLE_PROFILE_COPIED")
 	self:RegisterMessage("DONGLE_PROFILE_DELETED")
 	self:RegisterMessage("DONGLE_PROFILE_RESET")
 
+	-- Register for Blizzard events.
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 	self:RegisterEvent("PLAYER_REGEN_DISABLED")
-
 	self:RegisterEvent("LEARNED_SPELL_IN_TAB")
-
-	self:UpdateClicks()
 
     -- Securehook CreateFrame to catch any new raid frames
     local raidFunc = function(type, name, parent, template)
@@ -224,25 +228,32 @@ function Clique:SpellBookButtonPressed(frame, button)
     
     self.editSet[key] = t
     self:ListScrollUpdate()
-	self:UpdateClicks()
-	-- We can only make changes when out of combat
-	self:PLAYER_REGEN_ENABLED()
+    self:RebuildOOCSet()
+    self:PLAYER_REGEN_ENABLED()
+end
+
+function Clique:UseOOCSet(frame) -- Arg is optional. Affects ALL frames if not provided.
+	self:RemoveClickSet(L.CLICKSET_DEFAULT, frame)
+	self:RemoveClickSet(L.CLICKSET_HARMFUL, frame)
+	self:RemoveClickSet(L.CLICKSET_HELPFUL, frame)
+	self:ApplyClickSet(self.ooc_clickset, frame)
+end
+
+function Clique:UseCombatSet(frame) -- Arg is optional. Affects ALL frames if not provided.
+	self:RemoveClickSet(self.ooc_clickset, frame)
+	self:ApplyClickSet(L.CLICKSET_DEFAULT, frame)
+	self:ApplyClickSet(L.CLICKSET_HARMFUL, frame)
+	self:ApplyClickSet(L.CLICKSET_HELPFUL, frame)
 end
 
 -- Player is LEAVING combat
 function Clique:PLAYER_REGEN_ENABLED()
-	self:ApplyClickSet(L.CLICKSET_DEFAULT)
-	self:RemoveClickSet(L.CLICKSET_HARMFUL)
-	self:RemoveClickSet(L.CLICKSET_HELPFUL)
-	self:ApplyClickSet(self.ooc)
+	self:UseOOCSet()
 end
 
 -- Player is ENTERING combat
 function Clique:PLAYER_REGEN_DISABLED()
-	self:RemoveClickSet(self.ooc)
-	self:ApplyClickSet(L.CLICKSET_DEFAULT)
-	self:ApplyClickSet(L.CLICKSET_HARMFUL)
-	self:ApplyClickSet(L.CLICKSET_HELPFUL)
+	self:UseCombatSet()
 end
 
 local function wipe(t) -- Emulates "table.wipe".
@@ -253,45 +264,80 @@ local function wipe(t) -- Emulates "table.wipe".
     return t
 end
 
-function Clique:UpdateClicks()
-	local ooc = self.clicksets[L.CLICKSET_OOC]
-	local harm = self.clicksets[L.CLICKSET_HARMFUL]
-	local help = self.clicksets[L.CLICKSET_HELPFUL]
+function Clique:RebuildOOCSet()
+    local ooc = self.clicksets[L.CLICKSET_OOC]
+    local default = self.clicksets[L.CLICKSET_DEFAULT]
+    local harm = self.clicksets[L.CLICKSET_HARMFUL]
+    local help = self.clicksets[L.CLICKSET_HELPFUL]
 
-    -- Since harm/help buttons take priority over any others, we can't
+    -- The binding priority order is OOC > HELP + HARM > DEFAULT (used as final fallback).
     --
-    -- just apply the OOC set last.  Instead we use the self.ooc pseudo
-    -- set (which we build here) which contains only those help/harm
-    -- buttons that don't conflict with those defined in OOC.
+    -- Since help-/harmbuttonX frame attributes take priority over regular button click
+    -- attributes, we can't simply "apply the DEFAULT and OOC sets last to overwrite the help/harm
+    -- actions with the out of combat actions". Instead, we'll build the "self.ooc_clickset"
+    -- table which ONLY contains the HELP/HARM-buttons that DON'T conflict with anything
+    -- defined in the OOC set, as well as whatever DEFAULT buttons that DON'T conflict with
+    -- the OOC set OR with something bound in BOTH the HELP and HARM sets (because "default"
+    -- would never run whenever there are BOTH help and harm button handlers on a frame).
+    --
+    -- NOTE: If the player doesn't define any DEFAULT or OOC bindings at all, and places
+    -- everything in their Harm/Help sets, then BOTH of those FULL sets will be used below
+    -- regardless of whether Harm and Help bind the same button, since they're able to
+    -- co-exist! That's because the harmbutton bindings only happen on "attackable" units,
+    -- and the helpbutton bindings only happen on "friendly/helpful" units!
+    --
+    -- NOTE: The individual sets below can never contain duplicate/clashing bindings
+    -- WITHIN their OWN sets. Because every clickset table is keyed by the full button
+    -- combinations, such as "Shift-Alt-1". So we don't need to worry about that.
 
-    self.ooc = wipe(self.ooc or {})
+    self.ooc_clickset = wipe(self.ooc_clickset or {})
 
-    -- Create a hash map of the "taken" combinations
-    local takenBinds = {}
+    -- Create a hash map of the "taken" combinations within each click-set.
+    local takenBinds = {ooc = {}, harm = {}, help = {}}
 
+    -- Give highest priority to bindings defined in the OOC-set.
     for name, entry in pairs(ooc) do
         local key = string.format("%s:%s", entry.modifier, entry.button)
-        takenBinds[key] = true
-        table.insert(self.ooc, entry)
+        takenBinds.ooc[key] = true;
+        table.insert(self.ooc_clickset, entry)
     end
 
+    -- Now add the unit-dependent HARM bindings that don't clash with any OOC keys above.
+    -- NOTE: We avoid that since binding harm/help actions would override clashing OOC bindings.
     for name, entry in pairs(harm) do
         local button = string.gsub(entry.button, "harmbutton", "")
         local key = string.format("%s:%s", entry.modifier, button)
-        if not takenBinds[key] then
-            table.insert(self.ooc, entry)
+        if not takenBinds.ooc[key] then -- Only bind if it hasn't been bound by OOC above.
+            takenBinds.harm[key] = true;
+            table.insert(self.ooc_clickset, entry)
         end
     end
 
+    -- Next, add the unit-dependent HELP bindings that don't clash with anything above,
+    -- except for HARM which is allowed to "clash" (since help/harm can never conflict ingame).
     for name, entry in pairs(help) do
         local button = string.gsub(entry.button, "helpbutton", "")
         local key = string.format("%s:%s", entry.modifier, button)
-        if not takenBinds[key] then
-            table.insert(self.ooc, entry)
+        if not takenBinds.ooc[key] then -- Only bind if it hasn't been bound by OOC above.
+            takenBinds.help[key] = true;
+            table.insert(self.ooc_clickset, entry)
+        end
+    end
+
+    -- Lastly, add any DEFAULT-set "fallback" bindings which don't clash with the OOC above,
+    -- and which hasn't been bound by BOTH "help" and "harm" sets (meaning "default" would
+    -- never be able to trigger in that case, so it makes no sense to bind it at all).
+    for name, entry in pairs(default) do
+        local key = string.format("%s:%s", entry.modifier, entry.button)
+        -- Only bind if it HASN'T been bound by OOC above, AND not bound by BOTH "harm" and "help";
+        -- it is however TOTALLY OKAY if it's not in OOC but IS in **ONE** OF either "harm" or "help"!
+        if not takenBinds.ooc[key] and not (takenBinds.harm[key] and takenBinds.help[key]) then
+            table.insert(self.ooc_clickset, entry)
         end
     end
 	
-    self:UpdateTooltip()
+    -- Build a new table of data to show in the tooltip (used if frame-tooltips are enabled).
+    self:RebuildTooltipData()
 end
 
 function Clique:RegisterFrame(frame)
@@ -317,12 +363,9 @@ function Clique:RegisterFrame(frame)
 
 	if frame:CanChangeProtectedState() then
 		if InCombatLockdown() then
-			self:ApplyClickSet(L.CLICKSET_DEFAULT, frame)
-			self:ApplyClickSet(L.CLICKSET_HELPFUL, frame)
-			self:ApplyClickSet(L.CLICKSET_HARMFUL, frame)
+			self:UseCombatSet(frame)
 		else
-			self:ApplyClickSet(L.CLICKSET_DEFAULT, frame)
-			self:ApplyClickSet(self.ooc, frame)
+			self:UseOOCSet(frame)
 		end
 	end
 end
@@ -378,7 +421,7 @@ local function applyCurrentProfile()
     for name,set in pairs(Clique.clicksets) do
         Clique:RemoveClickSet(set)
     end
-    Clique:RemoveClickSet(Clique.ooc)
+    Clique:RemoveClickSet(Clique.ooc_clickset)
 
     -- Update our database profile links.
     Clique.profile = Clique.db.profile
@@ -392,7 +435,7 @@ local function applyCurrentProfile()
     Clique:ListScrollUpdate()
 
     -- Update and apply the clickset.
-    Clique:UpdateClicks()
+    Clique:RebuildOOCSet()
     Clique:PLAYER_REGEN_ENABLED()
 end
 
@@ -582,8 +625,8 @@ local tt_help = {}
 local tt_harm = {}
 local tt_default = {}
 
-function Clique:UpdateTooltip()
-	local ooc = self.ooc
+function Clique:RebuildTooltipData()
+	local ooc = self.ooc_clickset
 	local default = self.clicksets[L.CLICKSET_DEFAULT]
 	local harm = self.clicksets[L.CLICKSET_HARMFUL]
 	local help = self.clicksets[L.CLICKSET_HELPFUL]
