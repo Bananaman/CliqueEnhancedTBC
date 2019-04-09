@@ -116,6 +116,13 @@ if GetLocale() then
     L.DELETE = "Delete"
     L.EDIT = "Edit"
 
+    L.CLICKSET_DROPDOWN_HELP = "Select a click-set to edit..."
+
+    L.COMBAT_PRIORITY_HELP1 = "Combat Priority:"
+    L.COMBAT_PRIORITY_HELP2 = "HELP + HARM > DEFAULT"
+    L.OOC_PRIORITY_HELP1 = "Out of Combat Priority:"
+    L.OOC_PRIORITY_HELP2 = "OOC > HELP + HARM > DEFAULT"
+
     L["Clique Options"] = "Clique Options"
     L.DOWNCLICK_LABEL = "Trigger clicks on the 'down' portion of the click"
     L.EASTEREGG_LABEL = "Thank Jesus for sacrificing himself for mankind"
