@@ -645,102 +645,155 @@ function Clique:ShowAttributes()
 	self:RegisterFrame(PlayerFrame)
 end
 
-local tt_ooc = {}
-local tt_help = {}
-local tt_harm = {}
-local tt_default = {}
+Clique.tooltipData = {
+    -- Plain sets which contain only the exact bindings described within each set-category.
+    -- NOTE: These are mainly used as pre-built tooltip data for building the merged sets...
+    -- NOTE: harm ("hostile") means attackable, which includes any attackable neutral NPCs/mobs/critters,
+    -- and help ("helpful") means non-attackable, mainly friendly units/players.
+    ooc = {},
+    default = {},
+    harm = {},
+    help = {},
+    -- Complete, finalized OOC and IN-COMBAT "hostile" and "helpful" sets (with properly merged
+    -- data from all relevant sets, in priority-order). As well as "UNIFIED" sets (both help and
+    -- harm) for use in the "Clique Bindings" preview window (in unfiltered/"all"-mode).
+    merged_ooc_harm = {},
+    merged_ooc_help = {},
+    merged_ooc_unified = {},
+    merged_combat_harm = {},
+    merged_combat_help = {},
+    merged_combat_unified = {},
+}
+
+local function tt_Sort(a, b)
+    if a.mod == b.mod then
+        return a.unitType < b.unitType -- Sort by type of unit (all/help/harm).
+    else
+        return a.mod < b.mod -- Sort by modifier text (such as "Shift-LeftButton").
+    end
+end
+
+local function tt_Build(target, source)
+    wipe(target)
+
+    for k,v in pairs(source) do
+        local button = Clique:GetButtonText(v.button)
+        local mod = string.format("%s%s", v.modifier or "", button)
+        local action = string.format("%s (%s)", v.arg1 or "", v.type)
+        local unitType = string.match(v.button, "^(h[ea][lr][pm])button")
+        if (unitType ~= "help" and unitType ~= "harm") then unitType = "all"; end
+        table.insert(target, {mod = mod, action = action, unitType = unitType, fullData = v})
+    end
+
+    table.sort(target, tt_Sort)
+
+    return target
+end
 
 function Clique:RebuildTooltipData()
-	local ooc = self.ooc_clickset
-	local default = self.clicksets[L.CLICKSET_DEFAULT]
-	local harm = self.clicksets[L.CLICKSET_HARMFUL]
-	local help = self.clicksets[L.CLICKSET_HELPFUL]
+    local tt = self.tooltipData
 
-	for k,v in pairs(tt_ooc) do tt_ooc[k] = nil end
-	for k,v in pairs(tt_help) do tt_help[k] = nil end
-	for k,v in pairs(tt_harm) do tt_harm[k] = nil end
-	for k,v in pairs(tt_default) do tt_default[k] = nil end
+    -- Build the plain OOC, DEFAULT, HARM and HELP tooltip sets. The latter three sets are the IN COMBAT bindings.
+    -- NOTE: We mainly build this plain data for use in constructing the other "merged" sets.
+    tt_Build(tt.ooc, self.clicksets[L.CLICKSET_OOC])
+    tt_Build(tt.default, self.clicksets[L.CLICKSET_DEFAULT])
+    tt_Build(tt.harm, self.clicksets[L.CLICKSET_HARMFUL])
+    tt_Build(tt.help, self.clicksets[L.CLICKSET_HELPFUL])
 
-	-- Build the ooc lines, which includes both helpful and harmful
-	for k,v in pairs(ooc) do
-		local button = self:GetButtonText(v.button)
-		local mod = string.format("%s%s", v.modifier or "", button)
-		local action = string.format("%s (%s)", v.arg1 or "", v.type)
-		table.insert(tt_ooc, {mod = mod, action = action})
-	end
+    -- Build the "unified" OUT OF COMBAT tooltip set, from the pre-built "ooc_clickset" (which prioritizes "OOC > HELP + HARM > DEFAULT"),
+    -- which is ONLY for use in "/clique showbindings". This set accurately contains all keys that are bound while out of combat, and
+    -- doesn't even redundantly include any "default (all)" fallback bindings if BOTH harm and help keys are bound already (thus meaning
+    -- the "all" fallback binding would be totally unreachable). So it is the cleanest possible data for the unified "showbindings" tooltip.
+    tt_Build(tt.merged_ooc_unified, self.ooc_clickset)
 
-	-- Build the default lines
-	for k,v in pairs(default) do
-		local button = self:GetButtonText(v.button)
-		local mod = string.format("%s%s", v.modifier or "", button)
-		local action = string.format("%s (%s)", v.arg1 or "", v.type)
-		table.insert(tt_default, {mod = mod, action = action})
-	end
+    -- Build all of the tooltip sets.
+    -- NOTE: This may seem like a lot of work. But even with a HUGE clickset, this WHOLE "RebuildTooltipData" function runs in 1-2 milliseconds.
+    local merge_descriptors = {
+        -- Now build the "unified" IN COMBAT set, which is ONLY used by "/clique showbindings" to display a compact list of all in-combat
+        -- bindings. This uses the "maxSameBinds" feature to ensure that we don't list any "default" keys which are already bound in BOTH
+        -- the "harm" AND the "help" sets (which would mean that the "all/default" binding can NEVER run on ANY frames). We achieve this
+        -- by saying "add harm/help with -1 limit (unlimited key duplicates allowed; safe since there's no duplicates WITHIN those sets
+        -- since both are keyed by their modifier+button combinations)", and then we "add default only if we have less than 2 duplicates",
+        -- which in effect means that WHENEVER a key has been bound in BOTH the "harm" and "help" sets, the count will be 2, which means
+        -- that the "default" (3rd) key won't be added to the result. The final result is a tooltip-list of ONLY the "all/harm/help"
+        -- bindings that will ACTUALLY be reachable in combat! :-)
+        {target = tt.merged_combat_unified, sources = {{-1, tt.harm}, {-1, tt.help}, {2, tt.default}}},
+        -- Build merged OOC and IN COMBAT "Help" and "Harm" tooltip sets. This is very compact data which we actually show in unitframe
+        -- tooltips, since we automatically de-duplicate as follows: For OOC, we follow the same algorithm as "RebuildOOCSet()", which
+        -- means that we read the entirety of the OOC set, then any HARM (or HELP) keys that don't clash with OOC, and lastly any
+        -- DEFAULT keys which don't clash with *any* of the prior. As for IN COMBAT, we first read the HARM (or HELP) keys, and then
+        -- we read any DEFAULT keys which don't clash with the prior. This order of processing is important, since harm/help-button
+        -- bindings supercede any normal bindings. So to build the correct tooltip, we must hide the clashes in that exact order.
+        --
+        -- NOTE: We cannot base our OOC sets on the "ooc_clickset" data, because that set is meant for RAW binding data on the frames
+        -- and therefore contains all "default" bindings that WEREN'T bound in BOTH "harm" and "help" (which is the only scenario
+        -- where a "default" binding would be totally overridden and unreachable on every unitframe). For any keys where there's ONE
+        -- harm OR help binding AND a default binding, the "ooc_clickset" data would say something like "helpbutton1: First Aid,
+        -- button1: Cooking", which is intended to be processed as "If you click on a helpful frame, do first aid, otherwise (harm
+        -- frames), do cooking", and that's perfect for BINDINGS. But if we used that "ooc_clickset" data for our TOOLTIP, we'd
+        -- end up in a situation where our HELP tooltip shows the "First Aid" action (helpbutton1) AND the "Cooking" action (button1),
+        -- since neither is marked as "harmful" data. So, instead, we build individual tooltips from scratch below using the OOC set's
+        -- priorities, but ONLY using the relevant sets that would be used on specifically harmful or helpful unitframes!
+        {target = tt.merged_ooc_harm, sources = {{-1, tt.ooc}, {1, tt.harm}, {1, tt.default}}},
+        {target = tt.merged_ooc_help, sources = {{-1, tt.ooc}, {1, tt.help}, {1, tt.default}}},
+        {target = tt.merged_combat_harm, sources = {{-1, tt.harm}, {1, tt.default}}},
+        {target = tt.merged_combat_help, sources = {{-1, tt.help}, {1, tt.default}}},
+    }
+    for k,v in ipairs(merge_descriptors) do
+        local target = wipe(v.target)
 
-	-- Build the harm lines
-	for k,v in pairs(harm) do
-		local button = self:GetButtonText(v.button)
-		local mod = string.format("%s%s", v.modifier or "", button)
-		local action = string.format("%s (%s)", v.arg1 or "", v.type)
-		table.insert(tt_harm, {mod = mod, action = action})
-	end
+        -- Add non-clashing bindings from all sources, processed in the exact order that the "sources" input table lists them.
+        -- NOTE: The order of processing matters, since "harm/help" buttons take priority in WoW over "default" (non-specific) keys.
+        local bindCounts = {}
+        for sk,sourceInfo in ipairs(v.sources) do
+            local maxSameBinds = sourceInfo[1]
+            local source = sourceInfo[2]
+            for ek,entry in ipairs(source) do
+                local button = string.gsub(entry.fullData.button, "^h[ea][lr][pm]button", "")
+                local key = string.format("%s:%s", entry.fullData.modifier, button)
+                if not bindCounts[key] then bindCounts[key] = 0; end
+                if maxSameBinds == -1 or bindCounts[key] < maxSameBinds then
+                    bindCounts[key] = bindCounts[key] + 1
+                    table.insert(target, entry)
+                end
+            end
+        end
 
-	-- Build the help lines
-	for k,v in pairs(help) do
-		local button = self:GetButtonText(v.button)
-		local mod = string.format("%s%s", v.modifier or "", button)
-		local action = string.format("%s (%s)", v.arg1 or "", v.type)
-		table.insert(tt_help, {mod = mod, action = action})
-	end
+        table.sort(target, tt_Sort)
+    end
 
-	local function sort(a,b) 
-		return a.mod < b.mod
-	end
-
-	table.sort(tt_ooc, sort)
-	table.sort(tt_default, sort)
-	table.sort(tt_harm, sort)
-	table.sort(tt_help, sort)
+    -- If Clique's "ShowBindings" tooltip is visible, tell it to forcibly refresh its view of bindings
+    -- while preserving its currently active view-type (by sending nil as the first parameter).
+    if CliqueTooltip and CliqueTooltip:IsVisible() then
+        self:ShowBindings(nil, true)
+    end
 end
 	
 function Clique:AddTooltipLines()
-	if not self.profile.tooltips then return end
+    if not self.profile.tooltips then return end
 
-	local frame = GetMouseFocus()
-	if not frame then return end
-	if not self.ccframes[frame] then return end
+    local frame = GetMouseFocus()
+    if (not frame) or (not self.ccframes[frame]) then return end
 
-	-- Add a buffer line
-	GameTooltip:AddLine(" ")
-	if UnitAffectingCombat("player") then
-		if #tt_default ~= 0 then
-			GameTooltip:AddLine("Default bindings:")
-			for k,v in ipairs(tt_default) do
-				GameTooltip:AddDoubleLine(v.mod, v.action, 1, 1, 1, 1, 1, 1)
-			end
-		end
+    local tt = self.tooltipData
+    local unitIsHarmful = UnitCanAttack("player", "mouseover")
+    local inCombat = UnitAffectingCombat("player")
+    local helpSet = inCombat and tt.merged_combat_help or tt.merged_ooc_help
+    local harmSet = inCombat and tt.merged_combat_harm or tt.merged_ooc_harm
 
-		if #tt_help ~= 0 and not UnitCanAttack("player", "mouseover") then
-			GameTooltip:AddLine("Helpful bindings:")
-			for k,v in ipairs(tt_help) do
-				GameTooltip:AddDoubleLine(v.mod, v.action, 1, 1, 1, 1, 1, 1)
-			end
-		end
-
-		if #tt_harm ~= 0 and UnitCanAttack("player", "mouseover") then
-			GameTooltip:AddLine("Hostile bindings:")
-			for k,v in ipairs(tt_harm) do
-				GameTooltip:AddDoubleLine(v.mod, v.action, 1, 1, 1, 1, 1, 1)
-			end
-		end
-	else
-		if #tt_ooc ~= 0 then
-			GameTooltip:AddLine("Out of combat bindings:")
-			for k,v in ipairs(tt_ooc) do
-				GameTooltip:AddDoubleLine(v.mod, v.action, 1, 1, 1, 1, 1, 1)
-			end
-		end
-	end
+    if (not unitIsHarmful) and #helpSet > 0 then
+        GameTooltip:AddLine(" ");
+        GameTooltip:AddLine(inCombat and "Combat bindings (helpful):" or "Out of combat bindings (helpful):")
+        for k,v in ipairs(helpSet) do
+            GameTooltip:AddDoubleLine(v.mod, v.action, 1, 1, 1, 1, 1, 1)
+        end
+    elseif (unitIsHarmful) and #harmSet > 0 then
+        GameTooltip:AddLine(" ");
+        GameTooltip:AddLine(inCombat and "Combat bindings (hostile):" or "Out of combat bindings (hostile):")
+        for k,v in ipairs(harmSet) do
+            GameTooltip:AddDoubleLine(v.mod, v.action, 1, 1, 1, 1, 1, 1)
+        end
+    end
 end
 
 function Clique:ToggleTooltip()
@@ -766,7 +819,6 @@ function Clique:ShowBindings()
 
 		CliqueTooltip:EnableMouse()
 		CliqueTooltip:SetMovable()
-		CliqueTooltip:SetPadding(16)
 		CliqueTooltip:SetBackdropBorderColor(TOOLTIP_DEFAULT_COLOR.r, TOOLTIP_DEFAULT_COLOR.g, TOOLTIP_DEFAULT_COLOR.b);
 		CliqueTooltip:SetBackdropColor(TOOLTIP_DEFAULT_BACKGROUND_COLOR.r, TOOLTIP_DEFAULT_BACKGROUND_COLOR.g, TOOLTIP_DEFAULT_BACKGROUND_COLOR.b);
 
@@ -785,38 +837,26 @@ function Clique:ShowBindings()
 		CliqueTooltip:SetOwner(UIParent, "ANCHOR_PRESERVE")
 	end
 	
-	-- Actually fill it with the bindings
 	CliqueTooltip:SetText("Clique Bindings")
 
-	if #tt_default > 0 then
+	-- Output ALL configured combat and out-of-combat bindings...
+	-- NOTE: Because we need to display both the helpful and harmful bindings in a SINGLE, unified list (to avoid making
+	-- the tooltip too tall vertically), we'll suffix every binding with "all"/"harm"/"help" to indicate unit type.
+	local tt = self.tooltipData
+	local sections = {
+		{title = "Combat bindings", source = tt.merged_combat_unified},
+		{title = "Out of combat bindings", source = tt.merged_ooc_unified},
+	}
+	for i,section in ipairs(sections) do
 		CliqueTooltip:AddLine(" ")
-		CliqueTooltip:AddLine("Default bindings:")
-		for k,v in ipairs(tt_default) do
-			CliqueTooltip:AddDoubleLine(v.mod, v.action, 1, 1, 1, 1, 1, 1)
-		end
-	end
-
-	if #tt_help > 0 then
-		CliqueTooltip:AddLine(" ")
-		CliqueTooltip:AddLine("Helpful bindings:")
-		for k,v in ipairs(tt_help) do
-			CliqueTooltip:AddDoubleLine(v.mod, v.action, 1, 1, 1, 1, 1, 1)
-		end
-	end
-
-	if #tt_harm > 0 then
-		CliqueTooltip:AddLine(" ")
-		CliqueTooltip:AddLine("Hostile bindings:")
-		for k,v in ipairs(tt_harm) do
-			CliqueTooltip:AddDoubleLine(v.mod, v.action, 1, 1, 1, 1, 1, 1)
-		end
-	end
-		
-	if #tt_ooc > 0 then
-		CliqueTooltip:AddLine(" ")
-		CliqueTooltip:AddLine("Out of combat bindings:")
-		for k,v in ipairs(tt_ooc) do
-			CliqueTooltip:AddDoubleLine(v.mod, v.action, 1, 1, 1, 1, 1, 1)
+		CliqueTooltip:AddLine(section.title .. ":")
+		local hasBindings = section.source and section.source[1] ~= nil; -- Check if 1st entry exists in numeric table.
+		if hasBindings then
+			for k,v in ipairs(section.source) do
+				CliqueTooltip:AddDoubleLine(string.format("%s (%s)", v.mod, v.unitType), v.action, 1, 1, 1, 1, 1, 1)
+			end
+		else
+			CliqueTooltip:AddLine("Empty.", 1, 1, 1)
 		end
 	end
 
