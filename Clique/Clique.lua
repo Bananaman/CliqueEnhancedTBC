@@ -798,8 +798,11 @@ end
 
 function Clique:ToggleTooltip()
 	self.profile.tooltips = not self.profile.tooltips
-	self:PrintF("Listing of bindings in tooltips has been %s", 
+	self:PrintF("Showing your active bindings in tooltips has been %s", 
 	self.profile.tooltips and "Enabled" or "Disabled")
+	if (CliqueOptionsFrame and CliqueOptionsFrame:IsVisible() and CliqueOptionsFrame.refreshOptionsWidgets) then
+		CliqueOptionsFrame:refreshOptionsWidgets(); -- Update the "Options" window state to reflect the change.
+	end
 end
 
 function Clique:ShowBindings(viewType, forceShow)

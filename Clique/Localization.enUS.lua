@@ -126,6 +126,7 @@ if GetLocale() then
 
     L["Clique Options"] = "Clique Options"
     L.DOWNCLICK_LABEL = "Trigger clicks on the 'down' portion of the click"
+    L.SHOWTOOLTIPS_LABEL = "Show your active bindings in unitframe tooltips"
     L.EASTEREGG_LABEL = "Thank Jesus for sacrificing himself for mankind"
     L.EASTEREGG_MSG1 = "It's working as intended..."
     L.EASTEREGG_MSG2 = "Jesus is sad now..."
