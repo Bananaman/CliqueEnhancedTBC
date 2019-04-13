@@ -528,14 +528,34 @@ function Clique:CreateOptionsFrame()
 	font:SetText("Click Set:")
 	font:SetPoint("RIGHT", CliqueDropDown, "LEFT", 5, 3)
 	-- Button Creations
-    local buttonFunc = function(self) Clique:ButtonOnClick(self) end
+	local buttonFunc = function(self, button) Clique:ButtonOnClick(self, button) end
 
 	local button = CreateFrame("Button", "CliqueButtonClose", CliqueFrame.titleBar, "UIPanelCloseButton")
 	button:SetHeight(25)
 	button:SetWidth(25)
 	button:SetPoint("TOPRIGHT", -5, 3)
 	button:SetScript("OnClick", buttonFunc)
-    
+
+    local button = CreateFrame("Button", "CliqueButtonPreview", CliqueFrame, "UIPanelButtonGrayTemplate")
+    button:SetHeight(24)
+    button:SetWidth(60)
+    button:SetText(L.PREVIEW)
+    button:SetPoint("TOPLEFT", 10, -27)
+    button:SetScript("OnClick", buttonFunc)
+    button:RegisterForClicks("LeftButtonUp", "RightButtonUp") -- Not just leftbutton.
+    button:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+        GameTooltip:SetText("Live Preview of Bindings")
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddDoubleLine("Left-Click:", "View All Bindings", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
+        GameTooltip:AddDoubleLine("Shift-Left-Click:", "View Helpful Bindings", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
+        GameTooltip:AddDoubleLine("Shift-Right-Click:", "View Hostile Bindings", NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    button:SetScript("OnLeave", function(self)
+        GameTooltip:Hide()
+    end)
+
     local button = CreateFrame("Button", "CliqueButtonCustom", CliqueFrame, "UIPanelButtonGrayTemplate")
     button:SetHeight(24)
     button:SetWidth(60)
@@ -1169,7 +1189,7 @@ function Clique:FillListEntry(frame, idx)
     frame:Show()
 end
 
-function Clique:ButtonOnClick(button)
+function Clique:ButtonOnClick(button, mouseButton)
     local entry = self.sortList[self.listSelected]
 
     if button == CliqueButtonDelete then
@@ -1197,6 +1217,16 @@ function Clique:ButtonOnClick(button)
 		CliqueTextListFrame:Hide()
     elseif button == CliqueOptionsButtonClose then
         CliqueOptionsFrame:Hide()
+    elseif button == CliqueButtonPreview then
+        local viewType = "" -- Show all bindings by default.
+        if IsShiftKeyDown() then
+            if mouseButton == "LeftButton" then
+                viewType = "help" -- Shift-left-click = View only helpful-unit bindings.
+            elseif mouseButton == "RightButton" then
+                viewType = "harm" -- Shift-right-click = View only harmful-unit bindings.
+            end
+        end
+        self:ShowBindings(viewType)
     elseif button == CliqueButtonOptions then
         if CliqueOptionsFrame:IsVisible() then
             CliqueOptionsFrame:Hide()
@@ -1384,7 +1414,7 @@ function Clique:ButtonOnClick(button)
 		self.editSet[key] = entry
 		self:RebuildOOCSet()
 		self:PLAYER_REGEN_ENABLED()
-		self:ButtonOnClick(CliqueCustomButtonCancel)
+		self:ButtonOnClick(CliqueCustomButtonCancel, mouseButton)
 	end
     
     Clique:ListScrollUpdate()
@@ -1893,7 +1923,7 @@ function Clique:CreateOptionsWidgets(parent)
     button:SetHeight(25)
     button:SetWidth(25)
     button:SetPoint("TOPRIGHT", -5, 3)
-    button:SetScript("OnClick", function(self) Clique:ButtonOnClick(self) end)
+    button:SetScript("OnClick", function(self, button) Clique:ButtonOnClick(self, button) end)
 
     local downClick = makeCheckbox(parent, "CliqueOptionsAnyDown", L.DOWNCLICK_LABEL, 300)
     downClick:SetPoint("TOPLEFT", 5, -25)

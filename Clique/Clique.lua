@@ -802,7 +802,26 @@ function Clique:ToggleTooltip()
 	self.profile.tooltips and "Enabled" or "Disabled")
 end
 
-function Clique:ShowBindings()
+function Clique:ShowBindings(viewType, forceShow)
+	-- Determine which view-type to use, and whether the type has changed since last function call.
+	-- NOTE: When called via "/clique showbindings", the first parameter is always "showbindings" which we
+	-- translate to "show everything" below. That's intentional, to ensure the slash-cmd always shows ALL data.
+	local isChanged = false
+	if not viewType then
+		viewType = self.showBindingsViewType or "" -- Re-use the last active view-type.
+	end
+	if (viewType ~= "harm" and viewType ~= "help" and viewType ~= "") then viewType = ""; end -- Validate.
+	if self.showBindingsViewType ~= viewType then
+		isChanged = true
+		self.showBindingsViewType = viewType
+	end
+
+	-- If the view-type hasn't changed and the tooltip is visible, toggle it (hide it) again, unless forceShow.
+	if (not isChanged) and (not forceShow) and CliqueTooltip and CliqueTooltip:IsVisible() then
+		CliqueTooltip:Hide()
+		return
+	end
+
 	if not CliqueTooltip then
 		CliqueTooltip = CreateFrame("GameTooltip", "CliqueTooltip", UIParent, "GameTooltipTemplate")
 		CliqueTooltip:SetPoint("CENTER", 0, 0)
@@ -837,22 +856,31 @@ function Clique:ShowBindings()
 		CliqueTooltip:SetOwner(UIParent, "ANCHOR_PRESERVE")
 	end
 	
-	CliqueTooltip:SetText("Clique Bindings")
+	-- Describe any active view-type directly in the tooltip header.
+	local viewDescription = (viewType == "harm" and "Hostile") or (viewType == "help" and "Helpful") or ""
+	CliqueTooltip:SetText("Clique Bindings" .. (viewDescription ~= "" and string.format(": %s", viewDescription) or ""))
 
-	-- Output ALL configured combat and out-of-combat bindings...
+	-- Output ALL configured combat and out-of-combat bindings... with optional view-type to only show hostile or helpful unit actions.
 	-- NOTE: Because we need to display both the helpful and harmful bindings in a SINGLE, unified list (to avoid making
 	-- the tooltip too tall vertically), we'll suffix every binding with "all"/"harm"/"help" to indicate unit type.
+	-- NOTE: We use the non-unified tables when we view specific harm/help listings. Otherwise we'd get problems with bindings that contain
+	-- one "default (all)" action and one harm or help action on the same key. In a case such as "help + all" being bound (where "all"
+	-- would only run on harm-unitframes), there would be no way for us to know that the "all" would only run on harmful units, and we'd
+	-- therefore wrongly output BOTH the "help" AND the "all" action below since we'd have no way to filter out which one to show (there
+	-- isn't even any guaranteed order of items in the table; the "all" action can be before the "harm" action, so we can't even analyze
+	-- the data that way). So instead, we switch our whole view into DIRECTLY seeing the harm/help-specific tables used for unit-tooltips!
 	local tt = self.tooltipData
 	local sections = {
-		{title = "Combat bindings", source = tt.merged_combat_unified},
-		{title = "Out of combat bindings", source = tt.merged_ooc_unified},
+		{title = "Combat bindings", sources = {all = tt.merged_combat_unified, harm = tt.merged_combat_harm, help = tt.merged_combat_help}},
+		{title = "Out of combat bindings", sources = {all = tt.merged_ooc_unified, harm = tt.merged_ooc_harm, help = tt.merged_ooc_help}},
 	}
+	local viewSource = (viewType == "harm" or viewType == "help") and viewType or "all"
 	for i,section in ipairs(sections) do
 		CliqueTooltip:AddLine(" ")
-		CliqueTooltip:AddLine(section.title .. ":")
-		local hasBindings = section.source and section.source[1] ~= nil; -- Check if 1st entry exists in numeric table.
+		CliqueTooltip:AddLine(section.title .. (viewDescription ~= "" and string.format(" (%s)", string.lower(viewDescription)) or "") .. ":")
+		local hasBindings = section.sources[viewSource] and section.sources[viewSource][1] ~= nil; -- Check if 1st entry exists in numeric table.
 		if hasBindings then
-			for k,v in ipairs(section.source) do
+			for k,v in ipairs(section.sources[viewSource]) do
 				CliqueTooltip:AddDoubleLine(string.format("%s (%s)", v.mod, v.unitType), v.action, 1, 1, 1, 1, 1, 1)
 			end
 		else

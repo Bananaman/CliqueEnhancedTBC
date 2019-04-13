@@ -115,6 +115,7 @@ if GetLocale() then
     L.PROFILES = "Profiles"
     L.DELETE = "Delete"
     L.EDIT = "Edit"
+    L.PREVIEW = "Preview"
 
     L.CLICKSET_DROPDOWN_HELP = "Select a click-set to edit..."
 
