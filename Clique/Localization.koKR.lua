@@ -5,12 +5,12 @@
 local L = Clique.Locals
 
 if GetLocale() == "koKR" then
-	L.RANK                    = "레벨"
-	L.RANK_PATTERN            = "(%d+) 레벨"
-	L.CAST_FORMAT             = "%s(%d 레벨)"
+    L.RANK                    = "레벨"
+    L.RANK_PATTERN            = "(%d+) 레벨"
+    L.CAST_FORMAT             = "%s(%d 레벨)"
 
 --	L.RACIAL_PASSIVE          = "Racial Passive"
-	
+
 --	L.CLICKSET_DEFAULT        = "Default"
 --	L.CLICKSET_HARMFUL        = "Harmful actions"
 --	L.CLICKSET_HELPFUL        = "Helpful actions"

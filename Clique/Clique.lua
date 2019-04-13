@@ -17,37 +17,37 @@ local ipairs = ipairs
 
 local isEnabled;
 function Clique:Enable()
-	-- Only allow initialization ONCE per game session!
-	if isEnabled then return; end
-	isEnabled = true;
+    -- Only allow initialization ONCE per game session!
+    if isEnabled then return; end
+    isEnabled = true;
 
-	-- Grab the localisation table.
-	L = Clique.Locals
+    -- Grab the localisation table.
+    L = Clique.Locals
 
-	-- Set up database.
-	self.defaults = {
-		-- Profile: Values which are shared by all characters that use a specific profile.
-		profile = {
-			clicksets = {
-				[L.CLICKSET_DEFAULT] = {},
-				[L.CLICKSET_HARMFUL] = {},
-				[L.CLICKSET_HELPFUL] = {},
-				[L.CLICKSET_OOC] = {},
-			},
-			blacklist = {
-			},
-			tooltips = false,
-		},
+    -- Set up database.
+    self.defaults = {
+        -- Profile: Values which are shared by all characters that use a specific profile.
+        profile = {
+            clicksets = {
+                [L.CLICKSET_DEFAULT] = {},
+                [L.CLICKSET_HARMFUL] = {},
+                [L.CLICKSET_HELPFUL] = {},
+                [L.CLICKSET_OOC] = {},
+            },
+            blacklist = {
+            },
+            tooltips = false,
+        },
         -- Char: Values which are independently stored per-character, regardless of which profile each character uses.
         char = {
             downClick = false,
             easterEgg = false,
         },
-	}
-	
-	self.db = self:InitializeDB("CliqueDB", self.defaults)
-	self.profile = self.db.profile
-	self.clicksets = self.profile.clicksets
+    }
+
+    self.db = self:InitializeDB("CliqueDB", self.defaults)
+    self.profile = self.db.profile
+    self.clicksets = self.profile.clicksets
 
     self.editSet = self.clicksets[L.CLICKSET_DEFAULT]
 
@@ -113,72 +113,72 @@ function Clique:Enable()
     -- Register all default Blizzard unitframes.
     Clique:EnableFrames()
 
-	-- Register for dongle events.
-	self:RegisterMessage("DONGLE_PROFILE_CHANGED")
-	self:RegisterMessage("DONGLE_PROFILE_COPIED")
-	self:RegisterMessage("DONGLE_PROFILE_DELETED")
-	self:RegisterMessage("DONGLE_PROFILE_RESET")
+    -- Register for dongle events.
+    self:RegisterMessage("DONGLE_PROFILE_CHANGED")
+    self:RegisterMessage("DONGLE_PROFILE_COPIED")
+    self:RegisterMessage("DONGLE_PROFILE_DELETED")
+    self:RegisterMessage("DONGLE_PROFILE_RESET")
 
-	-- Register for Blizzard events.
-	self:RegisterEvent("PLAYER_REGEN_ENABLED")
-	self:RegisterEvent("PLAYER_REGEN_DISABLED")
-	self:RegisterEvent("LEARNED_SPELL_IN_TAB")
+    -- Register for Blizzard events.
+    self:RegisterEvent("PLAYER_REGEN_ENABLED")
+    self:RegisterEvent("PLAYER_REGEN_DISABLED")
+    self:RegisterEvent("LEARNED_SPELL_IN_TAB")
 
     -- Securehook CreateFrame to catch any new raid frames
     local raidFunc = function(type, name, parent, template)
-		if template == "RaidPulloutButtonTemplate" then
-			local btn = _G[name.."ClearButton"]
-			if btn then
-				self:RegisterFrame(btn)
-			end
-		end
-	end
+        if template == "RaidPulloutButtonTemplate" then
+            local btn = _G[name.."ClearButton"]
+            if btn then
+                self:RegisterFrame(btn)
+            end
+        end
+    end
 
-	local oldotsu = GameTooltip:GetScript("OnTooltipSetUnit")
-	if oldotsu then
-		GameTooltip:SetScript("OnTooltipSetUnit", function(...)
-			Clique:AddTooltipLines()
-			return oldotsu(...)
-		end)
-	else
-		GameTooltip:SetScript("OnTooltipSetUnit", function(...)
-			Clique:AddTooltipLines()
-		end)
-	end
-		
+    local oldotsu = GameTooltip:GetScript("OnTooltipSetUnit")
+    if oldotsu then
+        GameTooltip:SetScript("OnTooltipSetUnit", function(...)
+            Clique:AddTooltipLines()
+            return oldotsu(...)
+        end)
+    else
+        GameTooltip:SetScript("OnTooltipSetUnit", function(...)
+            Clique:AddTooltipLines()
+        end)
+    end
+
     hooksecurefunc("CreateFrame", raidFunc)
 
-	-- Create our slash command
-	self.cmd = self:InitializeSlashCommand("Clique commands", "CLIQUE", "clique")
-	self.cmd:RegisterSlashHandler("debug - Enables extra messages for debugging purposes", "debug", "ShowAttributes")
-	self.cmd:InjectDBCommands(self.db, "copy", "delete", "list", "reset", "set")
-	self.cmd:RegisterSlashHandler("tooltip - Enables binding lists in tooltips.", "tooltip", "ToggleTooltip")
-	self.cmd:RegisterSlashHandler("showbindings - Shows a window that contains the current bindings", "showbindings", "ShowBindings")
+    -- Create our slash command
+    self.cmd = self:InitializeSlashCommand("Clique commands", "CLIQUE", "clique")
+    self.cmd:RegisterSlashHandler("debug - Enables extra messages for debugging purposes", "debug", "ShowAttributes")
+    self.cmd:InjectDBCommands(self.db, "copy", "delete", "list", "reset", "set")
+    self.cmd:RegisterSlashHandler("tooltip - Enables binding lists in tooltips.", "tooltip", "ToggleTooltip")
+    self.cmd:RegisterSlashHandler("showbindings - Shows a window that contains the current bindings", "showbindings", "ShowBindings")
 
-	-- Place the Clique tab
-	self:LEARNED_SPELL_IN_TAB()
+    -- Place the Clique tab
+    self:LEARNED_SPELL_IN_TAB()
 end
 
 function Clique:EnableFrames()
     local tbl = {
-		PlayerFrame,
-		PetFrame,
-		PartyMemberFrame1,
-		PartyMemberFrame2,
-		PartyMemberFrame3,
-		PartyMemberFrame4,
-		PartyMemberFrame1PetFrame,
-		PartyMemberFrame2PetFrame,
-		PartyMemberFrame3PetFrame,
-		PartyMemberFrame4PetFrame,
-		TargetFrame,
-		TargetofTargetFrame,
+        PlayerFrame,
+        PetFrame,
+        PartyMemberFrame1,
+        PartyMemberFrame2,
+        PartyMemberFrame3,
+        PartyMemberFrame4,
+        PartyMemberFrame1PetFrame,
+        PartyMemberFrame2PetFrame,
+        PartyMemberFrame3PetFrame,
+        PartyMemberFrame4PetFrame,
+        TargetFrame,
+        TargetofTargetFrame,
     }
-    
+
     for i,frame in pairs(tbl) do
         self:RegisterFrame(frame)
     end
-end	   
+end
 
 function Clique:SpellBookButtonPressed(frame, button)
     -- We can only make changes when out of combat, but our spellbook overlays are
@@ -192,43 +192,43 @@ function Clique:SpellBookButtonPressed(frame, button)
     local name, rank = GetSpellName(id, SpellBookFrame.bookType)
 
     if rank == L.RACIAL_PASSIVE or rank == L.PASSIVE then
-		StaticPopup_Show("CLIQUE_PASSIVE_SKILL")
-		return
+        StaticPopup_Show("CLIQUE_PASSIVE_SKILL")
+        return
     end
-    
+
     local type = "spell"
 
-	if self.editSet == self.clicksets[L.CLICKSET_HARMFUL] then
-		button = string.format("%s%d", "harmbutton", self:GetButtonNumber(button))
-	elseif self.editSet == self.clicksets[L.CLICKSET_HELPFUL] then
-		button = string.format("%s%d", "helpbutton", self:GetButtonNumber(button))
-	else
-		button = self:GetButtonNumber(button)
-	end
+    if self.editSet == self.clicksets[L.CLICKSET_HARMFUL] then
+        button = string.format("%s%d", "harmbutton", self:GetButtonNumber(button))
+    elseif self.editSet == self.clicksets[L.CLICKSET_HELPFUL] then
+        button = string.format("%s%d", "helpbutton", self:GetButtonNumber(button))
+    else
+        button = self:GetButtonNumber(button)
+    end
 
     -- Skip this click if binding wasn't detected properly.
     if button == "" then return; end
 
     -- Build the structure
     local t = {
-		["button"] = button,
-		["modifier"] = self:GetModifierText(),
-		["texture"] = GetSpellTexture(id, SpellBookFrame.bookType),
-		["type"] = type,
-		["arg1"] = name,
-		["arg2"] = rank,
+        ["button"] = button,
+        ["modifier"] = self:GetModifierText(),
+        ["texture"] = GetSpellTexture(id, SpellBookFrame.bookType),
+        ["type"] = type,
+        ["arg1"] = name,
+        ["arg2"] = rank,
     }
 
     -- Enforce string keys for CheckBinding purposes, which uses "type+value" equality to detect duplicates.
     -- NOTE: Technically, t.modifier is always a string/empty string, so the result is always
     -- a string even if "button" is numeric. But we want to be 100000% sure that it's a string!
     local key = tostring(t.modifier .. t.button)
-    
+
     if self:CheckBinding(key) then
-		StaticPopup_Show("CLIQUE_BINDING_PROBLEM")
-		return
+        StaticPopup_Show("CLIQUE_BINDING_PROBLEM")
+        return
     end
-    
+
     self.editSet[key] = t
     self:ListScrollUpdate()
     self:RebuildOOCSet()
@@ -236,36 +236,36 @@ function Clique:SpellBookButtonPressed(frame, button)
 end
 
 function Clique:UseOOCSet(frame) -- Arg is optional. Affects ALL frames if not provided.
-	self:RemoveClickSet(L.CLICKSET_DEFAULT, frame)
-	self:RemoveClickSet(L.CLICKSET_HARMFUL, frame)
-	self:RemoveClickSet(L.CLICKSET_HELPFUL, frame)
-	self:ApplyClickSet(self.ooc_clickset, frame)
+    self:RemoveClickSet(L.CLICKSET_DEFAULT, frame)
+    self:RemoveClickSet(L.CLICKSET_HARMFUL, frame)
+    self:RemoveClickSet(L.CLICKSET_HELPFUL, frame)
+    self:ApplyClickSet(self.ooc_clickset, frame)
 end
 
 function Clique:UseCombatSet(frame) -- Arg is optional. Affects ALL frames if not provided.
-	self:RemoveClickSet(self.ooc_clickset, frame)
-	self:ApplyClickSet(L.CLICKSET_DEFAULT, frame)
-	self:ApplyClickSet(L.CLICKSET_HARMFUL, frame)
-	self:ApplyClickSet(L.CLICKSET_HELPFUL, frame)
+    self:RemoveClickSet(self.ooc_clickset, frame)
+    self:ApplyClickSet(L.CLICKSET_DEFAULT, frame)
+    self:ApplyClickSet(L.CLICKSET_HARMFUL, frame)
+    self:ApplyClickSet(L.CLICKSET_HELPFUL, frame)
 end
 
 -- Player is LEAVING combat
 function Clique:PLAYER_REGEN_ENABLED()
-	for frame,registered in pairs(self.incombat_registrations) do
-		if registered then
-			self:RegisterFrame(frame)
-		else
-			self:UnregisterFrame(frame)
-		end
-		self.incombat_registrations[frame] = nil
-	end
+    for frame,registered in pairs(self.incombat_registrations) do
+        if registered then
+            self:RegisterFrame(frame)
+        else
+            self:UnregisterFrame(frame)
+        end
+        self.incombat_registrations[frame] = nil
+    end
 
-	self:UseOOCSet()
+    self:UseOOCSet()
 end
 
 -- Player is ENTERING combat
 function Clique:PLAYER_REGEN_DISABLED()
-	self:UseCombatSet()
+    self:UseCombatSet()
 end
 
 local function wipe(t) -- Emulates "table.wipe".
@@ -347,98 +347,98 @@ function Clique:RebuildOOCSet()
             table.insert(self.ooc_clickset, entry)
         end
     end
-	
+
     -- Build a new table of data to show in the tooltip (used if frame-tooltips are enabled).
     self:RebuildTooltipData()
 end
 
 function Clique:RegisterFrame(frame)
-	if (InCombatLockdown()) then
-		self.incombat_registrations[frame] = true -- Will register it after combat.
-		return
-	end
+    if (InCombatLockdown()) then
+        self.incombat_registrations[frame] = true -- Will register it after combat.
+        return
+    end
 
-	local name = frame:GetName()
+    local name = frame:GetName()
 
-	if not frame:CanChangeProtectedState() then
-		error(string.format("Frame '%s' doesn't allow attribute modification, despite not being in combat.", name), 2) -- This should never happen.
-	end
+    if not frame:CanChangeProtectedState() then
+        error(string.format("Frame '%s' doesn't allow attribute modification, despite not being in combat.", name), 2) -- This should never happen.
+    end
 
-	if name and self.profile.blacklist[name] then 
-		self:UnregisterFrame(frame) -- We don't allow registration (enabling) of blacklisted frames!
-		if CliqueTextListFrame and self.textlist == "FRAMES" and CliqueTextListFrame:IsVisible() then
-			Clique:TextListScrollUpdate()
-		end
-		return 
-	end
+    if name and self.profile.blacklist[name] then
+        self:UnregisterFrame(frame) -- We don't allow registration (enabling) of blacklisted frames!
+        if CliqueTextListFrame and self.textlist == "FRAMES" and CliqueTextListFrame:IsVisible() then
+            Clique:TextListScrollUpdate()
+        end
+        return
+    end
 
-	if not self.ccframes[frame] then 
-		rawset(self.ccframes, frame, true)
-		if CliqueTextListFrame and self.textlist == "FRAMES" and CliqueTextListFrame:IsVisible() then
-			Clique:TextListScrollUpdate()
-		end
-	end
+    if not self.ccframes[frame] then
+        rawset(self.ccframes, frame, true)
+        if CliqueTextListFrame and self.textlist == "FRAMES" and CliqueTextListFrame:IsVisible() then
+            Clique:TextListScrollUpdate()
+        end
+    end
 
-	-- Register "AnyUp" or "AnyDown" on this frame, depending on configuration.
-	self:SetClickType(frame)
+    -- Register "AnyUp" or "AnyDown" on this frame, depending on configuration.
+    self:SetClickType(frame)
 
-	-- Apply "out of combat" actions, since we aren't in combat.
-	self:UseOOCSet(frame)
+    -- Apply "out of combat" actions, since we aren't in combat.
+    self:UseOOCSet(frame)
 end
 
 function Clique:ApplyClickSet(name, frame)
-	local set = self.clicksets[name] or name
+    local set = self.clicksets[name] or name
 
-	if frame then
-		for modifier,entry in pairs(set) do
-			self:SetAttribute(entry, frame)
-		end
-	else
-		for modifier,entry in pairs(set) do
-			self:SetAction(entry)
-		end
-	end					
+    if frame then
+        for modifier,entry in pairs(set) do
+            self:SetAttribute(entry, frame)
+        end
+    else
+        for modifier,entry in pairs(set) do
+            self:SetAction(entry)
+        end
+    end
 end
 
 function Clique:RemoveClickSet(name, frame)
-	local set = self.clicksets[name] or name
+    local set = self.clicksets[name] or name
 
-	if frame then
-		for modifier,entry in pairs(set) do
-			self:DeleteAttribute(entry, frame)
-		end
-	else
-		for modifier,entry in pairs(set) do
-			self:DeleteAction(entry)
-		end
-	end					
+    if frame then
+        for modifier,entry in pairs(set) do
+            self:DeleteAttribute(entry, frame)
+        end
+    else
+        for modifier,entry in pairs(set) do
+            self:DeleteAction(entry)
+        end
+    end
 end
 
 function Clique:UnregisterFrame(frame)
-	if (InCombatLockdown()) then
-		self.incombat_registrations[frame] = false -- Will unregister it after combat.
-		return
-	end
+    if (InCombatLockdown()) then
+        self.incombat_registrations[frame] = false -- Will unregister it after combat.
+        return
+    end
 
-	local name = frame:GetName()
+    local name = frame:GetName()
 
-	if not frame:CanChangeProtectedState() then
-		error(string.format("Frame '%s' doesn't allow attribute modification, despite not being in combat.", name), 2) -- This should never happen.
-	end
+    if not frame:CanChangeProtectedState() then
+        error(string.format("Frame '%s' doesn't allow attribute modification, despite not being in combat.", name), 2) -- This should never happen.
+    end
 
-	rawset(self.ccframes, frame, false) -- Important: Remember the given frame with a "false" value, to ensure it exists in ccframes.
-	if CliqueTextListFrame and self.textlist == "FRAMES" and CliqueTextListFrame:IsVisible() then
-		Clique:TextListScrollUpdate()
-	end
+    rawset(self.ccframes, frame, false) -- Important: Remember the given frame with a "false" value, to ensure it exists in ccframes.
+    if CliqueTextListFrame and self.textlist == "FRAMES" and CliqueTextListFrame:IsVisible() then
+        Clique:TextListScrollUpdate()
+    end
 
-	for name,set in pairs(self.clicksets) do
-		for modifier,entry in pairs(set) do
-			self:DeleteAttribute(entry, frame)
-		end
-	end
+    for name,set in pairs(self.clicksets) do
+        for modifier,entry in pairs(set) do
+            self:DeleteAttribute(entry, frame)
+        end
+    end
 
-	-- Restore normal "AnyUp" handler on this frame.
-	self:SetClickType(frame)
+    -- Restore normal "AnyUp" handler on this frame.
+    self:SetClickType(frame)
 end
 
 local function applyCurrentProfile()
@@ -465,184 +465,184 @@ local function applyCurrentProfile()
 end
 
 function Clique:DONGLE_PROFILE_CHANGED(event, db, parent, svname, profileKey)
-	if db == self.db then
-		self:PrintF(L.PROFILE_CHANGED, profileKey)
-		applyCurrentProfile()
+    if db == self.db then
+        self:PrintF(L.PROFILE_CHANGED, profileKey)
+        applyCurrentProfile()
 
-		-- Ensure Clique window title shows the new profile name.
-		if self.UpdateOptionsTitle then
-			self:UpdateOptionsTitle()
-		end
-	end
+        -- Ensure Clique window title shows the new profile name.
+        if self.UpdateOptionsTitle then
+            self:UpdateOptionsTitle()
+        end
+    end
 end
 
 function Clique:DONGLE_PROFILE_COPIED(event, db, parent, svname, copiedFrom, profileKey)
-	if db == self.db then
-		self:PrintF(L.PROFILE_COPIED, copiedFrom)
-		applyCurrentProfile()
-	end
+    if db == self.db then
+        self:PrintF(L.PROFILE_COPIED, copiedFrom)
+        applyCurrentProfile()
+    end
 end
 
 function Clique:DONGLE_PROFILE_RESET(event, db, parent, svname, profileKey)
-	if db == self.db then
-		self:PrintF(L.PROFILE_RESET, profileKey)
-		applyCurrentProfile()
-	end
+    if db == self.db then
+        self:PrintF(L.PROFILE_RESET, profileKey)
+        applyCurrentProfile()
+    end
 end
 
 
 function Clique:DONGLE_PROFILE_DELETED(event, db, parent, svname, profileKey)
-	if db == self.db then
-		self:PrintF(L.PROFILE_DELETED, profileKey)
-	
-		-- Our ACTIVE profile can never be deleted, so we only have to update the profile list window.
-		self.textlistSelected = nil
-		self:TextListScrollUpdate()
-		self:ListScrollUpdate()
-	end
+    if db == self.db then
+        self:PrintF(L.PROFILE_DELETED, profileKey)
+
+        -- Our ACTIVE profile can never be deleted, so we only have to update the profile list window.
+        self.textlistSelected = nil
+        self:TextListScrollUpdate()
+        self:ListScrollUpdate()
+    end
 end
 
 function Clique:SetAttribute(entry, frame)
-	local name = frame:GetName()
+    local name = frame:GetName()
 
-	-- Set up any special attributes
-	local type,button,value
+    -- Set up any special attributes
+    local type,button,value
 
-	if not tonumber(entry.button) then
-		type,button = select(3, string.find(entry.button, "(%a+)button(%d+)"))
-		frame:SetAttribute(entry.modifier..entry.button, type..button)
-		assert(frame:GetAttribute(entry.modifier..entry.button, type..button))
-		button = string.format("-%s%s", type, button)
-	end
+    if not tonumber(entry.button) then
+        type,button = select(3, string.find(entry.button, "(%a+)button(%d+)"))
+        frame:SetAttribute(entry.modifier..entry.button, type..button)
+        assert(frame:GetAttribute(entry.modifier..entry.button, type..button))
+        button = string.format("-%s%s", type, button)
+    end
 
-	button = button or entry.button
+    button = button or entry.button
 
-	if entry.type == "actionbar" then
-		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-		frame:SetAttribute(entry.modifier.."action"..button, entry.arg1)		
-	elseif entry.type == "action" then
-		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-		frame:SetAttribute(entry.modifier.."action"..button, entry.arg1)
-		if entry.arg2 then
-			frame:SetAttribute(entry.modifier.."unit"..button, entry.arg2)
-		end
-	elseif entry.type == "pet" then
-		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-		frame:SetAttribute(entry.modifier.."action"..button, entry.arg1)
-		if entry.arg2 then
-			frame:SetAttribute(entry.modifier.."unit"..button, entry.arg2)
-		end
-	elseif entry.type == "spell" then
-		local rank = entry.arg2
-		local cast
-		if rank then
-			if tonumber(rank) then
-				-- The rank is a number (pre-2.3) so fill in the format
-				cast = L.CAST_FORMAT:format(entry.arg1, rank)
-			else
-				-- The whole rank string is saved (post-2.3) so use it
-				cast = string.format("%s(%s)", entry.arg1, rank)
-			end
-		else
-			cast = entry.arg1
-		end
+    if entry.type == "actionbar" then
+        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
+        frame:SetAttribute(entry.modifier.."action"..button, entry.arg1)
+    elseif entry.type == "action" then
+        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
+        frame:SetAttribute(entry.modifier.."action"..button, entry.arg1)
+        if entry.arg2 then
+            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg2)
+        end
+    elseif entry.type == "pet" then
+        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
+        frame:SetAttribute(entry.modifier.."action"..button, entry.arg1)
+        if entry.arg2 then
+            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg2)
+        end
+    elseif entry.type == "spell" then
+        local rank = entry.arg2
+        local cast
+        if rank then
+            if tonumber(rank) then
+                -- The rank is a number (pre-2.3) so fill in the format
+                cast = L.CAST_FORMAT:format(entry.arg1, rank)
+            else
+                -- The whole rank string is saved (post-2.3) so use it
+                cast = string.format("%s(%s)", entry.arg1, rank)
+            end
+        else
+            cast = entry.arg1
+        end
 
-		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-		frame:SetAttribute(entry.modifier.."spell"..button, cast)
+        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
+        frame:SetAttribute(entry.modifier.."spell"..button, cast)
 
-		frame:SetAttribute(entry.modifier.."bag"..button, entry.arg2)
-		frame:SetAttribute(entry.modifier.."slot"..button, entry.arg3)
-		frame:SetAttribute(entry.modifier.."item"..button, entry.arg4)
-		if entry.arg5 then
-			frame:SetAttribute(entry.modifier.."unit"..button, entry.arg5)
-		end
-	elseif entry.type == "item" then
-		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-		frame:SetAttribute(entry.modifier.."bag"..button, entry.arg1)
-		frame:SetAttribute(entry.modifier.."slot"..button, entry.arg2)
-		frame:SetAttribute(entry.modifier.."item"..button, entry.arg3)
-		if entry.arg4 then
-			frame:SetAttribute(entry.modifier.."unit"..button, entry.arg4)
-		end
-	elseif entry.type == "macro" then
-		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-		if entry.arg1 then
-			frame:SetAttribute(entry.modifier.."macro"..button, entry.arg1)
-		else
-			local unit = SecureButton_GetModifiedUnit(frame, entry.modifier.."unit"..button)
-			local macro = tostring(entry.arg2)
-			if unit and macro then
-				macro = macro:gsub("target%s*=%s*clique", "target="..unit)
-			end
+        frame:SetAttribute(entry.modifier.."bag"..button, entry.arg2)
+        frame:SetAttribute(entry.modifier.."slot"..button, entry.arg3)
+        frame:SetAttribute(entry.modifier.."item"..button, entry.arg4)
+        if entry.arg5 then
+            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg5)
+        end
+    elseif entry.type == "item" then
+        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
+        frame:SetAttribute(entry.modifier.."bag"..button, entry.arg1)
+        frame:SetAttribute(entry.modifier.."slot"..button, entry.arg2)
+        frame:SetAttribute(entry.modifier.."item"..button, entry.arg3)
+        if entry.arg4 then
+            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg4)
+        end
+    elseif entry.type == "macro" then
+        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
+        if entry.arg1 then
+            frame:SetAttribute(entry.modifier.."macro"..button, entry.arg1)
+        else
+            local unit = SecureButton_GetModifiedUnit(frame, entry.modifier.."unit"..button)
+            local macro = tostring(entry.arg2)
+            if unit and macro then
+                macro = macro:gsub("target%s*=%s*clique", "target="..unit)
+            end
 
-			frame:SetAttribute(entry.modifier.."macro"..button, nil)
-			frame:SetAttribute(entry.modifier.."macrotext"..button, macro)
-		end
-	elseif entry.type == "stop" then
-		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-	elseif entry.type == "target" then
-		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-		if entry.arg1 then
-			frame:SetAttribute(entry.modifier.."unit"..button, entry.arg1)
-		end
-	elseif entry.type == "focus" then
-		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-		if entry.arg1 then
-			frame:SetAttribute(entry.modifier.."unit"..button, entry.arg1)
-		end
-	elseif entry.type == "assist" then
-		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-		if entry.arg1 then
-			frame:SetAttribute(entry.modifier.."unit"..button, entry.arg1)
-		end
-	elseif entry.type == "click" then
-		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-		frame:SetAttribute(entry.modifier.."clickbutton"..button, _G[entry.arg1])
-	elseif entry.type == "menu" then
-		frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-	end
+            frame:SetAttribute(entry.modifier.."macro"..button, nil)
+            frame:SetAttribute(entry.modifier.."macrotext"..button, macro)
+        end
+    elseif entry.type == "stop" then
+        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
+    elseif entry.type == "target" then
+        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
+        if entry.arg1 then
+            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg1)
+        end
+    elseif entry.type == "focus" then
+        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
+        if entry.arg1 then
+            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg1)
+        end
+    elseif entry.type == "assist" then
+        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
+        if entry.arg1 then
+            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg1)
+        end
+    elseif entry.type == "click" then
+        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
+        frame:SetAttribute(entry.modifier.."clickbutton"..button, _G[entry.arg1])
+    elseif entry.type == "menu" then
+        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
+    end
 end
 
 function Clique:DeleteAttribute(entry, frame)
-	local name = frame:GetName()
+    local name = frame:GetName()
 
-	local type,button,value
+    local type,button,value
 
-	if not tonumber(entry.button) then
-		type,button = select(3, string.find(entry.button, "(%a+)button(%d+)"))
-		frame:SetAttribute(entry.modifier..entry.button, nil)
-		button = string.format("-%s%s", type, button)
-	end
+    if not tonumber(entry.button) then
+        type,button = select(3, string.find(entry.button, "(%a+)button(%d+)"))
+        frame:SetAttribute(entry.modifier..entry.button, nil)
+        button = string.format("-%s%s", type, button)
+    end
 
-	button = button or entry.button
+    button = button or entry.button
 
-	entry.delete = true
+    entry.delete = true
 
-	frame:SetAttribute(entry.modifier.."type"..button, nil)
-	frame:SetAttribute(entry.modifier..entry.type..button, nil)
+    frame:SetAttribute(entry.modifier.."type"..button, nil)
+    frame:SetAttribute(entry.modifier..entry.type..button, nil)
 end
 
 function Clique:SetAction(entry)
-	for frame,enabled in pairs(self.ccframes) do
-		if enabled then
-			self:SetAttribute(entry, frame)
-		end
-	end
+    for frame,enabled in pairs(self.ccframes) do
+        if enabled then
+            self:SetAttribute(entry, frame)
+        end
+    end
 end
 
 function Clique:DeleteAction(entry)
-	for frame in pairs(self.ccframes) do
-		self:DeleteAttribute(entry, frame)
-	end
+    for frame in pairs(self.ccframes) do
+        self:DeleteAttribute(entry, frame)
+    end
 end
 
 function Clique:ShowAttributes()
-	self:Print("Enabled enhanced debugging.")
-	PlayerFrame:SetScript("OnAttributeChanged", function(self, ...) Clique:Print(self:GetName(), ...) end)
-	self:Print("Unregistering:")
-	self:UnregisterFrame(PlayerFrame)
-	self:Print("Registering:")
-	self:RegisterFrame(PlayerFrame)
+    self:Print("Enabled enhanced debugging.")
+    PlayerFrame:SetScript("OnAttributeChanged", function(self, ...) Clique:Print(self:GetName(), ...) end)
+    self:Print("Unregistering:")
+    self:UnregisterFrame(PlayerFrame)
+    self:Print("Registering:")
+    self:RegisterFrame(PlayerFrame)
 end
 
 Clique.tooltipData = {
@@ -768,7 +768,7 @@ function Clique:RebuildTooltipData()
         self:ShowBindings(nil, true)
     end
 end
-	
+
 function Clique:AddTooltipLines()
     if not self.profile.tooltips then return end
 
@@ -797,101 +797,101 @@ function Clique:AddTooltipLines()
 end
 
 function Clique:ToggleTooltip()
-	self.profile.tooltips = not self.profile.tooltips
-	self:PrintF("Showing your active bindings in tooltips has been %s", 
-	self.profile.tooltips and "Enabled" or "Disabled")
-	if (CliqueOptionsFrame and CliqueOptionsFrame:IsVisible() and CliqueOptionsFrame.refreshOptionsWidgets) then
-		CliqueOptionsFrame:refreshOptionsWidgets(); -- Update the "Options" window state to reflect the change.
-	end
+    self.profile.tooltips = not self.profile.tooltips
+    self:PrintF("Showing your active bindings in tooltips has been %s",
+    self.profile.tooltips and "Enabled" or "Disabled")
+    if (CliqueOptionsFrame and CliqueOptionsFrame:IsVisible() and CliqueOptionsFrame.refreshOptionsWidgets) then
+        CliqueOptionsFrame:refreshOptionsWidgets(); -- Update the "Options" window state to reflect the change.
+    end
 end
 
 function Clique:ShowBindings(viewType, forceShow)
-	-- Determine which view-type to use, and whether the type has changed since last function call.
-	-- NOTE: When called via "/clique showbindings", the first parameter is always "showbindings" which we
-	-- translate to "show everything" below. That's intentional, to ensure the slash-cmd always shows ALL data.
-	local isChanged = false
-	if not viewType then
-		viewType = self.showBindingsViewType or "" -- Re-use the last active view-type.
-	end
-	if (viewType ~= "harm" and viewType ~= "help" and viewType ~= "") then viewType = ""; end -- Validate.
-	if self.showBindingsViewType ~= viewType then
-		isChanged = true
-		self.showBindingsViewType = viewType
-	end
+    -- Determine which view-type to use, and whether the type has changed since last function call.
+    -- NOTE: When called via "/clique showbindings", the first parameter is always "showbindings" which we
+    -- translate to "show everything" below. That's intentional, to ensure the slash-cmd always shows ALL data.
+    local isChanged = false
+    if not viewType then
+        viewType = self.showBindingsViewType or "" -- Re-use the last active view-type.
+    end
+    if (viewType ~= "harm" and viewType ~= "help" and viewType ~= "") then viewType = ""; end -- Validate.
+    if self.showBindingsViewType ~= viewType then
+        isChanged = true
+        self.showBindingsViewType = viewType
+    end
 
-	-- If the view-type hasn't changed and the tooltip is visible, toggle it (hide it) again, unless forceShow.
-	if (not isChanged) and (not forceShow) and CliqueTooltip and CliqueTooltip:IsVisible() then
-		CliqueTooltip:Hide()
-		return
-	end
+    -- If the view-type hasn't changed and the tooltip is visible, toggle it (hide it) again, unless forceShow.
+    if (not isChanged) and (not forceShow) and CliqueTooltip and CliqueTooltip:IsVisible() then
+        CliqueTooltip:Hide()
+        return
+    end
 
-	if not CliqueTooltip then
-		CliqueTooltip = CreateFrame("GameTooltip", "CliqueTooltip", UIParent, "GameTooltipTemplate")
-		CliqueTooltip:SetPoint("CENTER", 0, 0)
-		CliqueTooltip.close = CreateFrame("Button", nil, CliqueTooltip)
-		CliqueTooltip.close:SetHeight(32)
-		CliqueTooltip.close:SetWidth(32)
-		CliqueTooltip.close:SetPoint("TOPRIGHT", 1, 0)
-		CliqueTooltip.close:SetScript("OnClick", function() 
-			CliqueTooltip:Hide()
-		end)
-		CliqueTooltip.close:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-		CliqueTooltip.close:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
-		CliqueTooltip.close:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
+    if not CliqueTooltip then
+        CliqueTooltip = CreateFrame("GameTooltip", "CliqueTooltip", UIParent, "GameTooltipTemplate")
+        CliqueTooltip:SetPoint("CENTER", 0, 0)
+        CliqueTooltip.close = CreateFrame("Button", nil, CliqueTooltip)
+        CliqueTooltip.close:SetHeight(32)
+        CliqueTooltip.close:SetWidth(32)
+        CliqueTooltip.close:SetPoint("TOPRIGHT", 1, 0)
+        CliqueTooltip.close:SetScript("OnClick", function()
+            CliqueTooltip:Hide()
+        end)
+        CliqueTooltip.close:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
+        CliqueTooltip.close:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
+        CliqueTooltip.close:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
 
-		CliqueTooltip:EnableMouse()
-		CliqueTooltip:SetMovable()
-		CliqueTooltip:SetBackdropBorderColor(TOOLTIP_DEFAULT_COLOR.r, TOOLTIP_DEFAULT_COLOR.g, TOOLTIP_DEFAULT_COLOR.b);
-		CliqueTooltip:SetBackdropColor(TOOLTIP_DEFAULT_BACKGROUND_COLOR.r, TOOLTIP_DEFAULT_BACKGROUND_COLOR.g, TOOLTIP_DEFAULT_BACKGROUND_COLOR.b);
+        CliqueTooltip:EnableMouse()
+        CliqueTooltip:SetMovable()
+        CliqueTooltip:SetBackdropBorderColor(TOOLTIP_DEFAULT_COLOR.r, TOOLTIP_DEFAULT_COLOR.g, TOOLTIP_DEFAULT_COLOR.b);
+        CliqueTooltip:SetBackdropColor(TOOLTIP_DEFAULT_BACKGROUND_COLOR.r, TOOLTIP_DEFAULT_BACKGROUND_COLOR.g, TOOLTIP_DEFAULT_BACKGROUND_COLOR.b);
 
-		CliqueTooltip:RegisterForDrag("LeftButton")
-		CliqueTooltip:SetScript("OnDragStart", function(self)
-			self:StartMoving()
-		end)
-		CliqueTooltip:SetScript("OnDragStop", function(self)
-			self:StopMovingOrSizing()
-			ValidateFramePosition(self)
-		end)		
-		CliqueTooltip:SetOwner(UIParent, "ANCHOR_PRESERVE")
-	end
+        CliqueTooltip:RegisterForDrag("LeftButton")
+        CliqueTooltip:SetScript("OnDragStart", function(self)
+            self:StartMoving()
+        end)
+        CliqueTooltip:SetScript("OnDragStop", function(self)
+            self:StopMovingOrSizing()
+            ValidateFramePosition(self)
+        end)
+        CliqueTooltip:SetOwner(UIParent, "ANCHOR_PRESERVE")
+    end
 
-	if not CliqueTooltip:IsShown() then
-		CliqueTooltip:SetOwner(UIParent, "ANCHOR_PRESERVE")
-	end
-	
-	-- Describe any active view-type directly in the tooltip header.
-	local viewDescription = (viewType == "harm" and "Hostile") or (viewType == "help" and "Helpful") or ""
-	CliqueTooltip:SetText("Clique Bindings" .. (viewDescription ~= "" and string.format(": %s", viewDescription) or ""))
+    if not CliqueTooltip:IsShown() then
+        CliqueTooltip:SetOwner(UIParent, "ANCHOR_PRESERVE")
+    end
 
-	-- Output ALL configured combat and out-of-combat bindings... with optional view-type to only show hostile or helpful unit actions.
-	-- NOTE: Because we need to display both the helpful and harmful bindings in a SINGLE, unified list (to avoid making
-	-- the tooltip too tall vertically), we'll suffix every binding with "all"/"harm"/"help" to indicate unit type.
-	-- NOTE: We use the non-unified tables when we view specific harm/help listings. Otherwise we'd get problems with bindings that contain
-	-- one "default (all)" action and one harm or help action on the same key. In a case such as "help + all" being bound (where "all"
-	-- would only run on harm-unitframes), there would be no way for us to know that the "all" would only run on harmful units, and we'd
-	-- therefore wrongly output BOTH the "help" AND the "all" action below since we'd have no way to filter out which one to show (there
-	-- isn't even any guaranteed order of items in the table; the "all" action can be before the "harm" action, so we can't even analyze
-	-- the data that way). So instead, we switch our whole view into DIRECTLY seeing the harm/help-specific tables used for unit-tooltips!
-	local tt = self.tooltipData
-	local sections = {
-		{title = "Combat bindings", sources = {all = tt.merged_combat_unified, harm = tt.merged_combat_harm, help = tt.merged_combat_help}},
-		{title = "Out of combat bindings", sources = {all = tt.merged_ooc_unified, harm = tt.merged_ooc_harm, help = tt.merged_ooc_help}},
-	}
-	local viewSource = (viewType == "harm" or viewType == "help") and viewType or "all"
-	for i,section in ipairs(sections) do
-		CliqueTooltip:AddLine(" ")
-		CliqueTooltip:AddLine(section.title .. (viewDescription ~= "" and string.format(" (%s)", string.lower(viewDescription)) or "") .. ":")
-		local hasBindings = section.sources[viewSource] and section.sources[viewSource][1] ~= nil; -- Check if 1st entry exists in numeric table.
-		if hasBindings then
-			for k,v in ipairs(section.sources[viewSource]) do
-				CliqueTooltip:AddDoubleLine(string.format("%s (%s)", v.mod, v.unitType), v.action, 1, 1, 1, 1, 1, 1)
-			end
-		else
-			CliqueTooltip:AddLine("Empty.", 1, 1, 1)
-		end
-	end
+    -- Describe any active view-type directly in the tooltip header.
+    local viewDescription = (viewType == "harm" and "Hostile") or (viewType == "help" and "Helpful") or ""
+    CliqueTooltip:SetText("Clique Bindings" .. (viewDescription ~= "" and string.format(": %s", viewDescription) or ""))
 
-	CliqueTooltip:Show()
+    -- Output ALL configured combat and out-of-combat bindings... with optional view-type to only show hostile or helpful unit actions.
+    -- NOTE: Because we need to display both the helpful and harmful bindings in a SINGLE, unified list (to avoid making
+    -- the tooltip too tall vertically), we'll suffix every binding with "all"/"harm"/"help" to indicate unit type.
+    -- NOTE: We use the non-unified tables when we view specific harm/help listings. Otherwise we'd get problems with bindings that contain
+    -- one "default (all)" action and one harm or help action on the same key. In a case such as "help + all" being bound (where "all"
+    -- would only run on harm-unitframes), there would be no way for us to know that the "all" would only run on harmful units, and we'd
+    -- therefore wrongly output BOTH the "help" AND the "all" action below since we'd have no way to filter out which one to show (there
+    -- isn't even any guaranteed order of items in the table; the "all" action can be before the "harm" action, so we can't even analyze
+    -- the data that way). So instead, we switch our whole view into DIRECTLY seeing the harm/help-specific tables used for unit-tooltips!
+    local tt = self.tooltipData
+    local sections = {
+        {title = "Combat bindings", sources = {all = tt.merged_combat_unified, harm = tt.merged_combat_harm, help = tt.merged_combat_help}},
+        {title = "Out of combat bindings", sources = {all = tt.merged_ooc_unified, harm = tt.merged_ooc_harm, help = tt.merged_ooc_help}},
+    }
+    local viewSource = (viewType == "harm" or viewType == "help") and viewType or "all"
+    for i,section in ipairs(sections) do
+        CliqueTooltip:AddLine(" ")
+        CliqueTooltip:AddLine(section.title .. (viewDescription ~= "" and string.format(" (%s)", string.lower(viewDescription)) or "") .. ":")
+        local hasBindings = section.sources[viewSource] and section.sources[viewSource][1] ~= nil; -- Check if 1st entry exists in numeric table.
+        if hasBindings then
+            for k,v in ipairs(section.sources[viewSource]) do
+                CliqueTooltip:AddDoubleLine(string.format("%s (%s)", v.mod, v.unitType), v.action, 1, 1, 1, 1, 1, 1)
+            end
+        else
+            CliqueTooltip:AddLine("Empty.", 1, 1, 1)
+        end
+    end
+
+    CliqueTooltip:Show()
 end
 
 function Clique:SetClickType(frame)
