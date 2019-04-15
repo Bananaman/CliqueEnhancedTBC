@@ -1345,34 +1345,50 @@ function Clique:ButtonOnClick(button, mouseButton)
         self:CustomRadio()
 
     elseif button == CliqueCustomButtonSave then
-        -- Add custom save logic in here
         local entry = self.customEntry
 
-        entry.arg1 = CliqueCustomArg1:GetText()
-        entry.arg2 = CliqueCustomArg2:GetText()
-        entry.arg3 = CliqueCustomArg3:GetText()
-        entry.arg4 = CliqueCustomArg4:GetText()
-        entry.arg5 = CliqueCustomArg5:GetText()
+        -- Read values from all single-line textboxes. Most actions only use a FEW of these.
+        -- NOTE: We also trim leading/trailing whitespace, since that isn't supposed to exist
+        -- in these values, and would interfere with "empty string" detection below, as well
+        -- as potentially breaking the action itself (ie unit="player  " instead of "player").
+        entry.arg1 = strtrim(CliqueCustomArg1:GetText())
+        entry.arg2 = strtrim(CliqueCustomArg2:GetText())
+        entry.arg3 = strtrim(CliqueCustomArg3:GetText())
+        entry.arg4 = strtrim(CliqueCustomArg4:GetText())
+        entry.arg5 = strtrim(CliqueCustomArg5:GetText())
 
+        -- Completely delete the variable of any textbox containing an empty string.
+        -- NOTE: This is extremely important. Most of Clique's binding-code depends on checking
+        -- whether "argX" exists or not, and if we keep an empty string, it would ALWAYS
+        -- be treated as "exists" even though it's empty. So we MUST remove empty values here.
         if entry.arg1 == "" then entry.arg1 = nil end
         if entry.arg2 == "" then entry.arg2 = nil end
         if entry.arg3 == "" then entry.arg3 = nil end
         if entry.arg4 == "" then entry.arg4 = nil end
         if entry.arg5 == "" then entry.arg5 = nil end
 
+        -- Convert purely numeric values to numbers.
         if tonumber(entry.arg1) then entry.arg1 = tonumber(entry.arg1) end
         if tonumber(entry.arg2) then entry.arg2 = tonumber(entry.arg2) end
         if tonumber(entry.arg3) then entry.arg3 = tonumber(entry.arg3) end
         if tonumber(entry.arg4) then entry.arg4 = tonumber(entry.arg4) end
         if tonumber(entry.arg5) then entry.arg5 = tonumber(entry.arg5) end
 
+        -- Special handling for the Macro-type action.
         if entry.type == "macro" then
-            local text = CliqueMultiScrollFrameEditBox:GetText()
-            if text ~= "" then
+            local text = strtrim(CliqueMultiScrollFrameEditBox:GetText())
+            if text ~= "" then -- Macro text exists, so use it...
                 entry.arg2 = text
+            else -- There is no macro text...
+                -- Erase any saved (old) macro text that exists from BEFORE editing the action.
+                -- NOTE: This is highly necessary, because when we edit a macro, the old arg2 (macro
+                -- text) gets saved into CliqueCustomArg2:SetText(), and then we read it back
+                -- above, which means that we'd wrongly believe the user has written a macro...
+                entry.arg2 = nil
             end
         end
 
+        -- Replace any item-links arguments with just the (first-seen) item name instead.
         local pattern = "Hitem.+|h%[(.+)%]|h"
         if entry.arg1 and string.find(entry.arg1, pattern) then
             entry.arg1 = select(3, string.find(entry.arg1, pattern))
@@ -1390,6 +1406,7 @@ function Clique:ButtonOnClick(button, mouseButton)
             entry.arg5 = select(3, string.find(entry.arg5, pattern))
         end
 
+        -- Validate the final result before saving the action...
         local issue
         local arg1 = entry.arg1 and tostring(entry.arg1)
         local arg2 = entry.arg2 and tostring(entry.arg2)
@@ -1409,7 +1426,7 @@ function Clique:ButtonOnClick(button, mouseButton)
         elseif entry.type == "macro" and arg1 and arg2 then
             issue = "You must specify EITHER a macro index, or macro text, not both."
         elseif entry.type == "macro" and not arg1 and not arg2 then
-            issue = "You must supply either a macro index, or macro text"
+            issue = "You must supply either a macro index, or macro text."
         elseif entry.type == "actionbar" and not arg1 then
             issue = "You must supply an action bar to change to."
         end
@@ -1420,15 +1437,15 @@ function Clique:ButtonOnClick(button, mouseButton)
             return
         end
 
-        -- Delete the one we're editing, if that's the case
+        -- If we are currently editing an existing entry, then delete that entry.
         if self.editEntry then
             local key = self.editEntry.modifier..self.editEntry.button
             self.editSet[key] = nil
             self:DeleteAction(self.editEntry)
-            self:RebuildOOCSet()
             self.editEntry = nil
         end
 
+        -- Save the custom entry in our set, and re-apply all sets.
         local key = entry.modifier..entry.button
         self.editSet[key] = entry
         self:RebuildOOCSet()
