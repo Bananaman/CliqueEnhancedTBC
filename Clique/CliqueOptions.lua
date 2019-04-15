@@ -1303,7 +1303,7 @@ function Clique:ButtonOnClick(button, mouseButton)
         local button = _G["CliqueTextList"..selected]
         self.db:DeleteProfile(button.realValue)
     elseif button == CliqueButtonEdit then
-        -- Make a copy of the entry
+        -- Make a copy of the entry that we want to edit.
         self.customEntry = {}
         for k,v in pairs(entry) do
             self.customEntry[k] = v
@@ -1311,15 +1311,18 @@ function Clique:ButtonOnClick(button, mouseButton)
 
         CliqueCustomFrame:Show()
 
-        -- Select the right radio button
+        -- Select the correct radio button, matching the type of entry.
+        local validCustomType = false
         for k,v in pairs(self.radio) do
-            if entry.type == k.type then
-                self:CustomRadio(k)
-                k:SetChecked(true)
+            if k.type == entry.type then
+                -- NOTE: Returns false if radiobutton type was somehow missing/invalid.
+                validCustomType = self:CustomRadio(k)
+                break
             end
         end
-
-        self.customEntry.type = entry.type
+        if not validCustomType then -- Didn't find a radiobutton of that type, or "CustomRadio()" returned false.
+            self:CustomRadio() -- Reset editor to default state with "welcome" screen.
+        end
 
         CliqueCustomArg1:SetText(entry.arg1 or "")
         CliqueCustomArg2:SetText(entry.arg2 or "")
@@ -1328,12 +1331,15 @@ function Clique:ButtonOnClick(button, mouseButton)
         CliqueCustomArg5:SetText(entry.arg5 or "")
 
         CliqueMultiScrollFrameEditBox:SetText(entry.arg2 or "")
+
         CliqueCustomButtonIcon.icon:SetTexture(entry.texture or "Interface\\Icons\\INV_Misc_QuestionMark")
 
         CliqueCustomButtonBinding.modifier = entry.modifier
         CliqueCustomButtonBinding.button = self:GetButtonNumber(entry.button)
         CliqueCustomButtonBinding:SetText(string.format("%s%s", entry.modifier, self:GetButtonText(entry.button)))
 
+        -- Mark the selected entry as the one "being edited", so that we know which "outdated" entry to delete
+        -- if the player saves the custom editor changes.
         self.editEntry = entry
 
     elseif button == CliqueCustomButtonCancel then
@@ -1450,6 +1456,9 @@ function Clique:ButtonOnClick(button, mouseButton)
         self.editSet[key] = entry
         self:RebuildOOCSet()
         self:PLAYER_REGEN_ENABLED()
+
+        -- Pretend that we also clicked on "Cancel", which runs the cleanup code
+        -- to reset the Custom Editor GUI into the "default" state again.
         self:ButtonOnClick(CliqueCustomButtonCancel, mouseButton)
     end
 
@@ -1572,61 +1581,76 @@ local buttonSetup = {
 }
 
 function Clique:CustomRadio(button)
-    local anySelected
+    -- Ensure the given button is toggled on, and clear all non-selected radiobuttons.
+    if button then
+        button:SetChecked(true)
+    end
     for k,v in pairs(self.radio) do
         if k ~= button then
             k:SetChecked(nil)
         end
     end
 
-    if not button or not buttonSetup[button.type] then
-        CliqueCustomHelpText:SetText(L.CUSTOM_HELP)
+    -- If no custom section radiobutton given, or an invalid one, then just clear the whole
+    -- frame so that's in a "fresh" state when the user opens the Custom Editor.
+    if (not button) or (not button.type) or (not buttonSetup[button.type]) then
+        CliqueCustomHelpText:SetText(L.CUSTOM_HELP) -- General introduction help.
         CliqueCustomArg1:Hide()
         CliqueCustomArg2:Hide()
         CliqueCustomArg3:Hide()
         CliqueCustomArg4:Hide()
         CliqueCustomArg5:Hide()
+        CliqueMulti:Hide() -- Also hide the multiline "macro text" editbox.
         CliqueCustomButtonBinding:SetText("Set Click Binding")
-        return
-    end
 
-    local entry = buttonSetup[button.type]
-    self.customEntry.type = button.type
-
-    if button and button.type then
-        if not button:GetChecked() then
+        if self.customEntry then
             self.customEntry.type = nil
         end
+        if button then
+            button:SetChecked(nil)
+        end
+
+        return false
     end
 
-    -- Clear any open arguments
+    -- Read configuration data about the given section.
+    local customSection = buttonSetup[button.type]
+
+    -- Tweak our currently-edited "custom entry" to have the same type as the clicked radiobutton.
+    self.customEntry.type = button.type
+
+    -- Clear old text arguments. Basically things user may have written into text-fields in other custom-sections.
     CliqueCustomArg1:SetText("")
     CliqueCustomArg2:SetText("")
     CliqueCustomArg3:SetText("")
     CliqueCustomArg4:SetText("")
     CliqueCustomArg5:SetText("")
 
-    CliqueCustomHelpText:SetText(entry.help)
-    CliqueCustomArg1.label:SetText(entry.arg1)
-    CliqueCustomArg2.label:SetText(entry.arg2)
-    CliqueCustomArg3.label:SetText(entry.arg3)
-    CliqueCustomArg4.label:SetText(entry.arg4)
-    CliqueCustomArg5.label:SetText(entry.arg5)
+    -- Set up the current section's help description and text-field labels.
+    CliqueCustomHelpText:SetText(customSection.help)
+    CliqueCustomArg1.label:SetText(customSection.arg1)
+    CliqueCustomArg2.label:SetText(customSection.arg2)
+    CliqueCustomArg3.label:SetText(customSection.arg3)
+    CliqueCustomArg4.label:SetText(customSection.arg4)
+    CliqueCustomArg5.label:SetText(customSection.arg5)
 
-    if entry.arg1 then CliqueCustomArg1:Show() else CliqueCustomArg1:Hide() end
-    if entry.arg2 then CliqueCustomArg2:Show() else CliqueCustomArg2:Hide() end
-    if entry.arg3 then CliqueCustomArg3:Show() else CliqueCustomArg3:Hide() end
-    if entry.arg4 then CliqueCustomArg4:Show() else CliqueCustomArg4:Hide() end
-    if entry.arg5 then CliqueCustomArg5:Show() else CliqueCustomArg5:Hide() end
+    -- Display the relevant fields for the given custom section.
+    if customSection.arg1 then CliqueCustomArg1:Show() else CliqueCustomArg1:Hide() end
+    if customSection.arg2 then CliqueCustomArg2:Show() else CliqueCustomArg2:Hide() end
+    if customSection.arg3 then CliqueCustomArg3:Show() else CliqueCustomArg3:Hide() end
+    if customSection.arg4 then CliqueCustomArg4:Show() else CliqueCustomArg4:Hide() end
+    if customSection.arg5 then CliqueCustomArg5:Show() else CliqueCustomArg5:Hide() end
 
-    -- Handle MacroText
+    -- Handle the macro-text field.
     if button.type == "macro" then
-        CliqueCustomArg2:Hide()
+        CliqueCustomArg2:Hide() -- Must be hidden since we use multiline box to hold macro arg2's contents instead.
         CliqueMulti:Show()
         CliqueMultiScrollFrameEditBox:SetText("")
     else
         CliqueMulti:Hide()
     end
+
+    return true
 end
 
 function Clique:UpdateIconFrame()
