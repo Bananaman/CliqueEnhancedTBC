@@ -620,7 +620,7 @@ function Clique:DeleteAttribute(entry, frame)
 
     button = button or entry.button
 
-    entry.delete = true
+    entry.delete = nil -- Remove variable. Cleans up a legacy Clique bug which always set this to true but never used it anywhere.
 
     frame:SetAttribute(entry.modifier.."type"..button, nil)
     frame:SetAttribute(entry.modifier..entry.type..button, nil)
