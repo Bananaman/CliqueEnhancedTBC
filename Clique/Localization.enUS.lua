@@ -113,9 +113,14 @@ if GetLocale() then
     L.CUSTOM = "Custom"
     L.FRAMES = "Frames"
     L.PROFILES = "Profiles"
+    L.OPTIONS = "Options"
     L.DELETE = "Delete"
     L.EDIT = "Edit"
     L.PREVIEW = "Preview"
+    L.SET = "Set"
+    L.NEW = "New"
+    L.CANCEL = "Cancel"
+    L.SAVE = "Save"
 
     L.CLICKSET_DROPDOWN_HELP = "Select a click-set to edit..."
 
