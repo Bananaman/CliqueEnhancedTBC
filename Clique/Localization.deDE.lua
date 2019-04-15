@@ -88,7 +88,7 @@ if GetLocale() == "deDE" then
     L.BS_ITEM_ARG3_LABEL = "Gegenstands Name:"
     L.BS_ITEM_ARG4_LABEL = "(Optional) Unit:"
 
-    L.BS_MACRO_HELP = "Benutzt eigenes Makro aus vorhandenem index"
+--  L.BS_MACRO_HELP = "Benutzt eigenes Makro aus vorhandenem index"
     L.BS_ARG1_LABEL = "Makro Index:"
     L.BS_ARG2_LABEL = "Makro Text:"
 

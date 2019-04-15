@@ -89,7 +89,7 @@ if GetLocale() == "zhTW" then
     L.BS_ITEM_ARG3_LABEL = "物品名稱:"
     L.BS_ITEM_ARG4_LABEL = "(可選) 單位:"
 
-    L.BS_MACRO_HELP = "使用給定索引的自定義巨集"
+--  L.BS_MACRO_HELP = "使用給定索引的自定義巨集"
     L.BS_MACRO_ARG1_LABEL = "巨集索引:"
     L.BS_MACRO_ARG2_LABEL = "巨集內容:"
 

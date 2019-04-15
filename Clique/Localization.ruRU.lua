@@ -90,7 +90,7 @@ if GetLocale() == "ruRU" then
     L.BS_ITEM_ARG3_LABEL = "Название предмета:"
     L.BS_ITEM_ARG4_LABEL = "(необязательно) Цель:"
 
-    L.BS_MACRO_HELP = "Использовать макрос из указанного номера ячейки."
+--  L.BS_MACRO_HELP = "Использовать макрос из указанного номера ячейки."
     L.BS_MACRO_ARG1_LABEL = "Номер ячейки макроса:"
     L.BS_MACRO_ARG2_LABEL = "Текст макроса:"
 

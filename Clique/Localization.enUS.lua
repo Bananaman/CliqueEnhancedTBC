@@ -66,7 +66,7 @@ if GetLocale() then
     L.HELP_TEXT               = "Welcome to Clique.  For basic operation, you can navigate the spellbook and decide what spell you'd like to bind to a specific click.  Then click on that spell with whatever click-binding you would like.  For example, navigate to \"Flash Heal\" and shift-LeftClick on it to bind that spell to Shift-LeftClick."
     L.CUSTOM_HELP             = "This is the Clique custom edit screen.  From here you can configure any of the combinations that the UI makes available to us in response to clicks.  Select a base action from the left column.  You can then click on the button below to set the binding you'd like, and then supply the arguments required (if any)."
 
-    L.BS_ACTIONBAR_HELP = "Change the actionbar.  'increment' will move it up one page, 'decrement' does the opposite.  If you supply a number, the action bar will be turned to that page.  You can specify 1,3 to toggle between pages 1 and 3"
+    L.BS_ACTIONBAR_HELP = "Change the actionbar.  'increment' will move it up one page, 'decrement' does the opposite.  If you supply a number, the action bar will be turned to that page.  You can specify 1,3 to toggle between pages 1 and 3."
     L.BS_ACTIONBAR_ARG1_LABEL = "Action:"
 
     L.BS_ACTION_HELP = "Simulate a click on an action button.  Specify the number of the action button."
@@ -77,7 +77,7 @@ if GetLocale() then
     L.BS_PET_ARG1_LABEL = "Pet Button Number:"
     L.BS_PET_ARG2_LABEL = "(Optional) Unit:"
 
-    L.BS_SPELL_HELP = "Cast a spell from the spellbook.  Takes a spell name, and optionally a bag and slot, or item name to use as the target of the spell (i.e. Feed Pet)"
+    L.BS_SPELL_HELP = "Cast a spell from the spellbook.  Takes a spell name, and optionally a bag and slot, or item name to use as the target of the spell (i.e. Feed Pet)."
     L.BS_SPELL_ARG1_LABEL = "Spell Name:"
     L.BS_SPELL_ARG2_LABEL = "*Rank/Bag Number:"
     L.BS_SPELL_ARG3_LABEL = "*Slot Number:"
@@ -90,25 +90,25 @@ if GetLocale() then
     L.BS_ITEM_ARG3_LABEL = "Item Name:"
     L.BS_ITEM_ARG4_LABEL = "(Optional) Unit:"
 
-    L.BS_MACRO_HELP = "Use a custom macro in a given index"
+    L.BS_MACRO_HELP = "Use a normal macro via index, or write a custom macro (up to 1024 characters).  In custom macros, you can use the special \"[target=clique]\" or \"[target=mouseover]\" unit specifiers to automatically target the clicked unitframe (instead of your character's actual target)."
     L.BS_MACRO_ARG1_LABEL = "Macro Index:"
     L.BS_MACRO_ARG2_LABEL = "Macro Text:"
 
-    L.BS_STOP_HELP = "Stops casting the current spell"
+    L.BS_STOP_HELP = "Stops casting the current spell."
 
-    L.BS_TARGET_HELP = "Targets the unit"
+    L.BS_TARGET_HELP = "Targets a unit."
     L.BS_TARGET_ARG1_LABEL = "(Optional) Unit:"
 
-    L.BS_FOCUS_HELP = "Sets your \"focus\" unit"
+    L.BS_FOCUS_HELP = "Sets your \"focus\" unit."
     L.BS_FOCUS_ARG1_LABEL = "(Optional) Unit:"
 
-    L.BS_ASSIST_HELP = "Assists the unit"
+    L.BS_ASSIST_HELP = "Assists a unit."
     L.BS_ASSIST_ARG1_LABEL = "(Optional) Unit:"
 
-    L.BS_CLICK_HELP = "Simulate click on a button"
+    L.BS_CLICK_HELP = "Simulate click on a GUI button."
     L.BS_CLICK_ARG1_LABEL = "Button Name:"
 
-    L.BS_MENU_HELP = "Shows the unit pop up menu"
+    L.BS_MENU_HELP = "Shows the unit popup menu."
 
     L.CUSTOM = "Custom"
     L.FRAMES = "Frames"

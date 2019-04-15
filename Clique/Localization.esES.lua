@@ -87,7 +87,7 @@ if GetLocale() == "esES" then
     L.BS_ITEM_ARG3_LABEL = "Nombre del Item:"
     L.BS_ITEM_ARG4_LABEL = "(Opcional) Unidad:"
 
-    L.BS_MACRO_HELP = "Use una macro por defecto en un indice en particular"
+--  L.BS_MACRO_HELP = "Use una macro por defecto en un indice en particular"
     L.BS_MACRO_ARG1_LABEL = "Indice Macro:"
     L.BS_MACRO_ARG2_LABEL = "Texto Macro:"
 

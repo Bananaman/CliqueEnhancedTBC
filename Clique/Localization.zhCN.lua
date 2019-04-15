@@ -89,7 +89,7 @@ if GetLocale() == "zhCN" then
     L.BS_ITEM_ARG3_LABEL = "物品名称:"
     L.BS_ITEM_ARG4_LABEL = "(可选) 单位:"
 
-    L.BS_MACRO_HELP = "使用给定索引的自定义宏"
+--  L.BS_MACRO_HELP = "使用给定索引的自定义宏"
     L.BS_MACRO_ARG1_LABEL = "宏索引:"
     L.BS_MACRO_ARG2_LABEL = "宏内容:"
 
