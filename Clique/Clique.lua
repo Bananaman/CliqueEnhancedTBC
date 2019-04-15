@@ -206,6 +206,10 @@ function Clique:SpellBookButtonPressed(frame, button)
         button = self:GetButtonNumber(button)
     end
 
+    -- Automatically remove rank variable if spell has no rank info,
+    -- otherwise we'd end up with parenthesis like "spell: Attack ()".
+    if rank == "" then rank = nil; end
+
     -- Skip this click if binding wasn't detected properly.
     if button == "" then return; end
 

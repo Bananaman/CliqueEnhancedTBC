@@ -1139,11 +1139,6 @@ end
 
 function Clique:FillListEntry(frame, idx)
     local entry = self.sortList[idx]
-    if tonumber(entry.arg2) then
-        rank = string.format("Rank %d", entry.arg2)
-    elseif entry.arg2 then
-        rank = entry.arg2
-    end
 
     local type = string.format("%s%s", string.upper(string.sub(entry.type, 1, 1)), string.sub(entry.type, 2))
     local button = entry.button
@@ -1168,7 +1163,22 @@ function Clique:FillListEntry(frame, idx)
         end
         frame.name:SetText(string.format("Pet Action %d%s", arg1, target))
     elseif entry.type == "spell" then
+        -- Determine what spell rank to display, if any...
+        local rank
         if entry.arg2 then
+            if tonumber(entry.arg2) then -- Rank was saved as a number, by old Clique versions.
+                rank = string.format("Rank %d", entry.arg2)
+            else -- Has SOME "non-nil" value... such as "Rank 2" (full string saved, done by modern Clique versions).
+                -- NOTE: This permanently fixes any legacy Clique data that wrongly has an empty string
+                -- instead of nil for spells with no rank-data. We don't HAVE TO apply this fix, since
+                -- binding spells as "Attack()" vs "Attack" is the same thing, but it's still nice to fix
+                -- the core underlying data this way.
+                if entry.arg2 == "" then entry.arg2 = nil; end
+                rank = entry.arg2 -- Use value as-is... NOTE: Properly REMAINS "nil" if we had to rewrite legacy arg2 above.
+            end
+        end
+
+        if rank then
             frame.name:SetText(string.format("%s (%s)%s", arg1, rank, entry.arg5 and (" on " .. arg5) or ""))
         else
             frame.name:SetText(string.format("%s%s", arg1, entry.arg5 and " on " .. arg5 or ""))
