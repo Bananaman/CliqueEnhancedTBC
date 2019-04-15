@@ -923,6 +923,12 @@ function Clique:CreateOptionsFrame()
     CliqueIconSelectFrame.title:SetText("Select an icon")
     CliqueIconSelectFrame:Hide()
 
+    local button = CreateFrame("Button", "CliqueIconSelectButtonClose", CliqueIconSelectFrame.titleBar, "UIPanelCloseButton")
+    button:SetHeight(25)
+    button:SetWidth(25)
+    button:SetPoint("TOPRIGHT", -5, 3)
+    button:SetScript("OnClick", buttonFunc)
+
     CreateFrame("CheckButton", "CliqueIcon1", CliqueIconSelectFrame, "CliqueIconTemplate")
     CliqueIcon1:SetID(1)
     CliqueIcon1:SetPoint("TOPLEFT", 25, -35)
@@ -1218,6 +1224,8 @@ function Clique:ButtonOnClick(button, mouseButton)
         CliqueTextListFrame:Hide()
     elseif button == CliqueOptionsButtonClose then
         CliqueOptionsFrame:Hide()
+    elseif button == CliqueIconSelectButtonClose then
+        CliqueIconSelectFrame:Hide()
     elseif button == CliqueButtonPreview then
         local viewType = "" -- Show all bindings by default.
         if IsShiftKeyDown() then
