@@ -507,19 +507,15 @@ function Clique:DONGLE_PROFILE_DELETED(event, db, parent, svname, profileKey)
 end
 
 function Clique:SetAttribute(entry, frame)
-    local name = frame:GetName()
-
-    -- Set up any special attributes
-    local type,button,value
-
-    if not tonumber(entry.button) then
-        type,button = select(3, string.find(entry.button, "(%a+)button(%d+)"))
+    local type, button
+    if not tonumber(entry.button) then -- If not purely numeric.
+        type, button = select(3, string.find(entry.button, "^(%a+)button(%d+)"))
         frame:SetAttribute(entry.modifier..entry.button, type..button)
-        assert(frame:GetAttribute(entry.modifier..entry.button, type..button))
+        --assert(frame:GetAttribute(entry.modifier..entry.button, type..button)) -- Validate that the attribute was set.
         button = string.format("-%s%s", type, button)
+    else
+        button = entry.button
     end
-
-    button = button or entry.button
 
     if entry.type == "actionbar" then
         frame:SetAttribute(entry.modifier.."type"..button, entry.type)
@@ -527,15 +523,11 @@ function Clique:SetAttribute(entry, frame)
     elseif entry.type == "action" then
         frame:SetAttribute(entry.modifier.."type"..button, entry.type)
         frame:SetAttribute(entry.modifier.."action"..button, entry.arg1)
-        if entry.arg2 then
-            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg2)
-        end
+        frame:SetAttribute(entry.modifier.."unit"..button, entry.arg2 or "")
     elseif entry.type == "pet" then
         frame:SetAttribute(entry.modifier.."type"..button, entry.type)
         frame:SetAttribute(entry.modifier.."action"..button, entry.arg1)
-        if entry.arg2 then
-            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg2)
-        end
+        frame:SetAttribute(entry.modifier.."unit"..button, entry.arg2 or "")
     elseif entry.type == "spell" then
         local rank = entry.arg2
         local cast
@@ -557,48 +549,41 @@ function Clique:SetAttribute(entry, frame)
         frame:SetAttribute(entry.modifier.."bag"..button, entry.arg2)
         frame:SetAttribute(entry.modifier.."slot"..button, entry.arg3)
         frame:SetAttribute(entry.modifier.."item"..button, entry.arg4)
-        if entry.arg5 then
-            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg5)
-        end
+        frame:SetAttribute(entry.modifier.."unit"..button, entry.arg5 or "")
     elseif entry.type == "item" then
         frame:SetAttribute(entry.modifier.."type"..button, entry.type)
         frame:SetAttribute(entry.modifier.."bag"..button, entry.arg1)
         frame:SetAttribute(entry.modifier.."slot"..button, entry.arg2)
         frame:SetAttribute(entry.modifier.."item"..button, entry.arg3)
-        if entry.arg4 then
-            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg4)
-        end
+        frame:SetAttribute(entry.modifier.."unit"..button, entry.arg4 or "")
     elseif entry.type == "macro" then
-        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-        if entry.arg1 then
-            frame:SetAttribute(entry.modifier.."macro"..button, entry.arg1)
-        else
+        local macro, macroText
+        if entry.arg1 then -- Trigger macro slot/index.
+            macro = entry.arg1
+        else -- Run macro text.
+            -- Any "target=clique" will be replaced with the unit that
+            -- each bound frame refers to. Such as "target=party1".
             local unit = SecureButton_GetModifiedUnit(frame, entry.modifier.."unit"..button)
-            local macro = tostring(entry.arg2)
-            if unit and macro then
-                macro = macro:gsub("target%s*=%s*clique", "target="..unit)
+            local rawMacro = tostring(entry.arg2)
+            if unit and rawMacro then
+                macroText = rawMacro:gsub("target%s*=%s*clique", "target="..unit)
             end
-
-            frame:SetAttribute(entry.modifier.."macro"..button, nil)
-            frame:SetAttribute(entry.modifier.."macrotext"..button, macro)
         end
+
+        frame:SetAttribute(entry.modifier.."type"..button, entry.type)
+        frame:SetAttribute(entry.modifier.."macro"..button, macro)
+        frame:SetAttribute(entry.modifier.."macrotext"..button, macroText)
     elseif entry.type == "stop" then
         frame:SetAttribute(entry.modifier.."type"..button, entry.type)
     elseif entry.type == "target" then
         frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-        if entry.arg1 then
-            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg1)
-        end
+        frame:SetAttribute(entry.modifier.."unit"..button, entry.arg1 or "")
     elseif entry.type == "focus" then
         frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-        if entry.arg1 then
-            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg1)
-        end
+        frame:SetAttribute(entry.modifier.."unit"..button, entry.arg1 or "")
     elseif entry.type == "assist" then
         frame:SetAttribute(entry.modifier.."type"..button, entry.type)
-        if entry.arg1 then
-            frame:SetAttribute(entry.modifier.."unit"..button, entry.arg1)
-        end
+        frame:SetAttribute(entry.modifier.."unit"..button, entry.arg1 or "")
     elseif entry.type == "click" then
         frame:SetAttribute(entry.modifier.."type"..button, entry.type)
         frame:SetAttribute(entry.modifier.."clickbutton"..button, _G[entry.arg1])
@@ -608,17 +593,14 @@ function Clique:SetAttribute(entry, frame)
 end
 
 function Clique:DeleteAttribute(entry, frame)
-    local name = frame:GetName()
-
-    local type,button,value
-
-    if not tonumber(entry.button) then
-        type,button = select(3, string.find(entry.button, "(%a+)button(%d+)"))
+    local type, button
+    if not tonumber(entry.button) then -- If not purely numeric.
+        type, button = select(3, string.find(entry.button, "^(%a+)button(%d+)"))
         frame:SetAttribute(entry.modifier..entry.button, nil)
         button = string.format("-%s%s", type, button)
+    else
+        button = entry.button
     end
-
-    button = button or entry.button
 
     entry.delete = nil -- Remove variable. Cleans up a legacy Clique bug which always set this to true but never used it anywhere.
 
