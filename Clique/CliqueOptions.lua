@@ -1188,11 +1188,11 @@ function Clique:FillListEntry(frame, idx)
     elseif entry.type == "stop" then
         frame.name:SetText("Stop Casting Current Spell")
     elseif entry.type == "target" then
-        frame.name:SetText(string.format("Target Unit: %s", arg1 and entry.arg1 or ""))
+        frame.name:SetText(string.format("Target Unit: %s", entry.arg1 and arg1 or "(Clicked)"))
     elseif entry.type == "focus" then
-        frame.name:SetText(string.format("Set Focus Unit: %s", arg1 and entry.arg1 or ""))
+        frame.name:SetText(string.format("Set Focus Unit: %s", entry.arg1 and arg1 or "(Clicked)"))
     elseif entry.type == "assist" then
-        frame.name:SetText(string.format("Assist Unit: %s", arg1 and entry.arg1 or ""))
+        frame.name:SetText(string.format("Assist Unit: %s", entry.arg1 and arg1 or "(Clicked)"))
     elseif entry.type == "item" then
         if entry.arg1 then
             frame.name:SetText(string.format("Item: %d,%d", arg1, arg2))
@@ -1200,7 +1200,7 @@ function Clique:FillListEntry(frame, idx)
             frame.name:SetText(string.format("Item: %s", arg3))
         end
     elseif entry.type == "macro" then
-        frame.name:SetText(string.format("Macro: %s", arg1 and entry.arg1 or string.sub(arg2, 1, 20)))
+        frame.name:SetText(string.format("Macro: %s", entry.arg1 and arg1 or string.sub(arg2, 1, 20)))
     end
 
     frame:Show()
