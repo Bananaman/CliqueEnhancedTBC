@@ -36,21 +36,18 @@ function Clique:Enable()
             },
             blacklist = {
             },
-            tooltips = false,
         },
         -- Char: Values which are independently stored per-character, regardless of which profile each character uses.
         char = {
             downClick = false,
             autoBindMaxRank = true,
+            unitTooltips = false,
             easterEgg = false,
         },
     }
 
     self.db = self:InitializeDB("CliqueDB", self.defaults)
-    self.profile = self.db.profile
-    self.clicksets = self.profile.clicksets
-
-    self.editSet = self.clicksets[L.CLICKSET_DEFAULT]
+    self:LinkProfileData()
 
     -- Dynamically built to hold all actions that will be registered while out of combat.
     self.ooc_clickset = {}
@@ -467,6 +464,40 @@ function Clique:UnregisterFrame(frame)
     self:SetClickType(frame)
 end
 
+function Clique:LinkProfileData()
+    -- Set all database links to the profile.
+    self.profile = self.db.profile
+    self.clicksets = self.profile.clicksets
+    self.editSet = self.clicksets[L.CLICKSET_DEFAULT]
+
+    -- Upgrade any outdated data to newer format.
+    if (self.profile.tooltips ~= nil) then
+        -- The "unit tooltips" setting has been moved from being a per-profile value, to instead
+        -- being a per-character value (which is less annoying, since otherwise you'd have to
+        -- constantly toggle the option on/off whenever you switch profile). We'll migrate the
+        -- setting directly into the matching per-character database, if one already exists.
+        -- Otherwise, if the profile name is formatted like a "Character - Realm" profile, then
+        -- we'll create the per-character database if it's missing (we may have some false positives
+        -- for non-existent characters, but that's no big deal since a character-database is tiny).
+        -- NOTE: And yes... if the player was using a custom-named profile such as "Heal Set" or
+        -- are using a profile from another character, then we don't auto-migrate "tooltips" into
+        -- their current (playing) per-character database here, but they can enable it themselves.
+        local charDB = CliqueDB.char[self.db.keys.profile]
+        if charDB then
+            -- Character database already exists named after this profile. Migrate directly.
+            charDB.unitTooltips = self.profile.tooltips
+        elseif strlen(self.db.keys.profile) >= 5 and string.find(self.db.keys.profile, " - ") then
+            -- The profile name is at least 5 characters long and contains " - ", so we can pretty
+            -- safely assume that it's a profile named after a character, such as "Someone - Somerealm",
+            -- but they don't have a per-character database yet. We'll therefore create one.
+            CliqueDB.char[self.db.keys.profile] = {
+                unitTooltips = self.profile.tooltips
+            }
+        end
+        self.profile.tooltips = nil -- Regardless of migration, we'll clear the profile's old value.
+    end
+end
+
 local function applyCurrentProfile()
     -- Remove existing click bindings.
     for name,set in pairs(Clique.clicksets) do
@@ -475,10 +506,7 @@ local function applyCurrentProfile()
     Clique:RemoveClickSet(Clique.ooc_clickset)
 
     -- Update our database profile links.
-    Clique.profile = Clique.db.profile
-    Clique.clicksets = Clique.profile.clicksets
-    Clique.editSet = Clique.clicksets[L.CLICKSET_DEFAULT]
-    Clique.profileKey = profileKey
+    Clique:LinkProfileData()
 
     -- Refresh the profile editor if it exists.
     Clique.textlistSelected = nil
@@ -778,7 +806,7 @@ function Clique:RebuildTooltipData()
 end
 
 function Clique:AddTooltipLines()
-    if not self.profile.tooltips then return end
+    if not self.db.char.unitTooltips then return end
 
     local frame = GetMouseFocus()
     if (not frame) or (not self.ccframes[frame]) then return end
@@ -805,9 +833,8 @@ function Clique:AddTooltipLines()
 end
 
 function Clique:ToggleTooltip()
-    self.profile.tooltips = not self.profile.tooltips
-    self:PrintF("Showing your active bindings in tooltips has been %s",
-    self.profile.tooltips and "Enabled" or "Disabled")
+    self.db.char.unitTooltips = not self.db.char.unitTooltips
+    self:PrintF("Showing your active bindings in tooltips has been %s", self.db.char.unitTooltips and "Enabled" or "Disabled")
     if (CliqueOptionsFrame and CliqueOptionsFrame:IsVisible() and CliqueOptionsFrame.refreshOptionsWidgets) then
         CliqueOptionsFrame:refreshOptionsWidgets(); -- Update the "Options" window state to reflect the change.
     end

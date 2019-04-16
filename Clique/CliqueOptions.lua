@@ -2025,8 +2025,8 @@ function Clique:CreateOptionsWidgets(parent)
     local autoBindMaxRank = makeCheckbox(parent, "CliqueOptionsAutoBindMaxRank", L.AUTOBINDMAXRANK_LABEL, 300)
     autoBindMaxRank:SetPoint("TOPLEFT", 5, -45)
 
-    local showTooltips = makeCheckbox(parent, "CliqueOptionsShowTooltips", L.SHOWTOOLTIPS_LABEL, 300)
-    showTooltips:SetPoint("TOPLEFT", 5, -65)
+    local unitTooltips = makeCheckbox(parent, "CliqueOptionsUnitTooltips", L.UNITTOOLTIPS_LABEL, 300)
+    unitTooltips:SetPoint("TOPLEFT", 5, -65)
 
     local easterEgg = makeCheckbox(parent, "CliqueOptionsEasterEgg", L.EASTEREGG_LABEL, 300)
     easterEgg:SetPoint("TOPLEFT", 5, -85)
@@ -2034,11 +2034,11 @@ function Clique:CreateOptionsWidgets(parent)
     parent.refreshOptionsWidgets = function(self)
         local downClick = Clique.db.char.downClick
         local autoBindMaxRank = Clique.db.char.autoBindMaxRank
-        local showTooltips = Clique.db.profile.tooltips
+        local unitTooltips = Clique.db.char.unitTooltips
         local easterEgg = Clique.db.char.easterEgg
         CliqueOptionsAnyDown:SetChecked(downClick)
         CliqueOptionsAutoBindMaxRank:SetChecked(autoBindMaxRank)
-        CliqueOptionsShowTooltips:SetChecked(showTooltips)
+        CliqueOptionsUnitTooltips:SetChecked(unitTooltips)
         CliqueOptionsEasterEgg:SetChecked(easterEgg)
     end
 
@@ -2053,8 +2053,8 @@ function Clique:CreateOptionsWidgets(parent)
         parent:refreshOptionsWidgets()
     end)
 
-    showTooltips:SetScript("OnClick", function(self)
-        Clique.db.profile.tooltips = not Clique.db.profile.tooltips
+    unitTooltips:SetScript("OnClick", function(self)
+        Clique.db.char.unitTooltips = not Clique.db.char.unitTooltips
         parent:refreshOptionsWidgets()
     end)
 
