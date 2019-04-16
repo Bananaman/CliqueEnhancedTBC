@@ -1061,8 +1061,11 @@ function Clique:CreateOptionsFrame()
 end
 
 function Clique:ListScrollUpdate()
-    Clique:ValidateButtons()
-    if not CliqueListScroll then return end
+    if not CliqueListScroll then
+        -- List not available yet. But run ValidateButtons before we abort...
+        Clique:ValidateButtons()
+        return
+    end
 
     local idx,button
     Clique:SortList()
@@ -1091,6 +1094,10 @@ function Clique:ListScrollUpdate()
             button:Hide()
         end
     end
+
+    -- Set up the bottom-bar button availability (such as Delete/Edit/Max), based on the currently
+    -- selected list item. This step MUST BE DONE LAST, *AFTER* we've re-sorted the list above.
+    Clique:ValidateButtons()
 end
 
 local sortFunc = function(a,b)
