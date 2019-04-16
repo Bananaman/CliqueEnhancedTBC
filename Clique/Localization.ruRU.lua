@@ -11,9 +11,6 @@ if GetLocale() == "ruRU" then
     L.RANK_PATTERN            = "Уровень (%d+)"
     L.CAST_FORMAT             = "%s(Уровень %s)"
 
-    L.RACIAL_PASSIVE          = "Пассивный расовый навык"
-    L.PASSIVE                 = SPELL_PASSIVE
-
     L.CLICKSET_DEFAULT        = "Стандартный"
     L.CLICKSET_HARMFUL        = "Вредящие действия"
     L.CLICKSET_HELPFUL        = "Помогающие действия"

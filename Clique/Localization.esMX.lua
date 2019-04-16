@@ -9,8 +9,6 @@ if GetLocale() == "esMX" then
     L.RANK                    = "Rango"
     L.RANK_PATTERN            = "Rango (%d+)"
     L.CAST_FORMAT             = "%s(Rango %s)"
-    L.RACIAL_PASSIVE          = "Pasivo racial"
-    L.PASSIVE                 = SPELL_PASSIVE
     L.CLICKSET_DEFAULT        = "Por Defecto"
     L.CLICKSET_HARMFUL        = "Aciones de Daño"
     L.CLICKSET_HELPFUL        = "Acciones de Ayuda"

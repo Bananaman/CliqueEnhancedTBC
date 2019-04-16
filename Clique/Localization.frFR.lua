@@ -9,8 +9,6 @@ if GetLocale() == "frFR" then
     L.RANK_PATTERN            = "Rang (%d+)"
     L.CAST_FORMAT             = "%s(Rang %d)"
 
---	L.RACIAL_PASSIVE          = "Racial Passive"
-
 --	L.CLICKSET_DEFAULT        = "Default"
 --	L.CLICKSET_HARMFUL        = "Harmful actions"
 --	L.CLICKSET_HELPFUL        = "Helpful actions"

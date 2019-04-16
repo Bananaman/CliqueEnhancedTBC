@@ -10,9 +10,6 @@ if GetLocale() == "zhCN" then
     L.RANK_PATTERN            = "等级 (%d+)"
     L.CAST_FORMAT             = "%s(等级 %s)"
 
-    L.RACIAL_PASSIVE          = "种族被动技能"
-    L.PASSIVE                 = SPELL_PASSIVE
-
     L.CLICKSET_DEFAULT        = "默认"
     L.CLICKSET_HARMFUL        = "对敌方动作"
     L.CLICKSET_HELPFUL        = "对友方动作"

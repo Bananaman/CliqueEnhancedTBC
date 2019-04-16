@@ -9,9 +9,6 @@ if GetLocale() == "deDE" then
     L.RANK_PATTERN            = "Rang (%d+)"
     L.CAST_FORMAT             = "%s(Rang %s)"
 
-    L.RACIAL_PASSIVE          = "Volk Passiv"
-    L.PASSIVE                 = SPELL_PASSIVE
-
     L.CLICKSET_DEFAULT        = "Standard"
     L.CLICKSET_HARMFUL        = "Schadhafte Aktionen"
     L.CLICKSET_HELPFUL        = "Hilfreiche Aktionen"

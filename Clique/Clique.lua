@@ -188,17 +188,18 @@ function Clique:SpellBookButtonPressed(frame, button)
         return
     end
 
+    -- Get spell information.
     local id = SpellBook_GetSpellID(this:GetParent():GetID());
-    local texture = GetSpellTexture(id, SpellBookFrame.bookType)
     local name, rank = GetSpellName(id, SpellBookFrame.bookType)
+    if not name then return; end -- Abort if spell didn't exist...
 
-    if rank == L.RACIAL_PASSIVE or rank == L.PASSIVE then
+    -- Refuse to bind Passive/Racial Passive spells, since those cannot be cast.
+    if IsPassiveSpell(id, SpellBookFrame.bookType) then
         StaticPopup_Show("CLIQUE_PASSIVE_SKILL")
         return
     end
 
-    local type = "spell"
-
+    -- Transform the clicked mousebutton into a usable format.
     if self.editSet == self.clicksets[L.CLICKSET_HARMFUL] then
         button = string.format("%s%d", "harmbutton", self:GetButtonNumber(button))
     elseif self.editSet == self.clicksets[L.CLICKSET_HELPFUL] then
@@ -207,10 +208,13 @@ function Clique:SpellBookButtonPressed(frame, button)
         button = self:GetButtonNumber(button)
     end
 
-    -- Skip this click if binding wasn't detected properly.
+    -- Skip this click if mouse-button wasn't detected properly.
     if button == "" then return; end
 
-    -- Automatically remove rank variable if spell has no rank info,
+    -- Detect which modifier keys are held down, if any...
+    local modifier = self:GetModifierText()
+
+    -- Automatically remove rank variable if spell has no rank info at all,
     -- otherwise we'd end up with parenthesis like "spell: Attack ()".
     if rank == "" then rank = nil; end
 
@@ -230,26 +234,27 @@ function Clique:SpellBookButtonPressed(frame, button)
         end
     end
 
-    -- Build the clickset entry's data structure.
-    local entry = {
-        ["button"] = button,
-        ["modifier"] = self:GetModifierText(),
-        ["texture"] = GetSpellTexture(id, SpellBookFrame.bookType),
-        ["type"] = type,
-        ["arg1"] = name,
-        ["arg2"] = rank,
-    }
+    -- Generate string key for CheckBinding purposes, which uses "variable type and value" table key equality to detect duplicates.
+    -- NOTE: Technically, "modifier" is always a string/empty string (thus generating a string result), so tostring() is just for extra safety.
+    local key = tostring(modifier .. button)
 
-    -- Enforce string keys for CheckBinding purposes, which uses "type+value" equality to detect duplicates.
-    -- NOTE: Technically, entry.modifier is always a string/empty string, so the result is always
-    -- a string even if "button" is numeric. But we want to be 100000% sure that it's a string!
-    local key = tostring(entry.modifier .. entry.button)
-
+    -- Refuse to bind if key already exists in the current clickset.
     if self:CheckBinding(key) then
         StaticPopup_Show("CLIQUE_BINDING_PROBLEM")
         return
     end
 
+    -- Build the clickset entry's data structure.
+    local entry = {
+        ["button"] = button,
+        ["modifier"] = modifier,
+        ["texture"] = GetSpellTexture(id, SpellBookFrame.bookType),
+        ["type"] = "spell",
+        ["arg1"] = name,
+        ["arg2"] = rank,
+    }
+
+    -- Add the entry, update the list view, and re-apply all clicksets.
     self.editSet[key] = entry
     self:ListScrollUpdate()
     self:RebuildOOCSet()
