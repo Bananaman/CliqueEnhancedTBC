@@ -1228,19 +1228,20 @@ function Clique:ButtonOnClick(button, mouseButton)
             return
         end
 
-        self.editSet[entry.modifier..entry.button] = nil
+        -- If the user had selected the last list entry, set selection to "remaining" last entry.
         local len = #self.sortList - 1
-
         if self.listSelected > len then
             self.listSelected = len
         end
 
+        -- Erase the binding from the database.
+        self.editSet[entry.modifier..entry.button] = nil
+
+        -- Clear frame attributes of the deleted binding, and re-apply all bindings.
         self:DeleteAttributeAllFrames(entry)
+        entry = nil
         self:RebuildOOCSet()
         self:PLAYER_REGEN_ENABLED()
-        entry = nil
-
-        self:ListScrollUpdate()
 
     elseif button == CliqueButtonMax then
         -- Delete rank information from spell, and then re-apply all bindings.
