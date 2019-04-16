@@ -558,6 +558,13 @@ function Clique:CreateOptionsFrame()
         GameTooltip:Hide()
     end)
 
+    local button = CreateFrame("Button", "CliqueButtonProfiles", CliqueFrame, "UIPanelButtonGrayTemplate")
+    button:SetHeight(24)
+    button:SetWidth(60)
+    button:SetText(L.PROFILES)
+    button:SetPoint("LEFT", CliqueButtonPreview, "RIGHT", 3, 0)
+    button:SetScript("OnClick", buttonFunc)
+
     local button = CreateFrame("Button", "CliqueButtonCustom", CliqueFrame, "UIPanelButtonGrayTemplate")
     button:SetHeight(24)
     button:SetWidth(60)
@@ -572,18 +579,11 @@ function Clique:CreateOptionsFrame()
     button:SetPoint("LEFT", CliqueButtonCustom, "RIGHT", 3, 0)
     button:SetScript("OnClick", buttonFunc)
 
-    local button = CreateFrame("Button", "CliqueButtonProfiles", CliqueFrame, "UIPanelButtonGrayTemplate")
-    button:SetHeight(24)
-    button:SetWidth(60)
-    button:SetText(L.PROFILES)
-    button:SetPoint("LEFT", CliqueButtonFrames, "RIGHT", 3, 0)
-    button:SetScript("OnClick", buttonFunc)
-
     local button = CreateFrame("Button", "CliqueButtonOptions", CliqueFrame, "UIPanelButtonGrayTemplate")
     button:SetHeight(24)
     button:SetWidth(60)
     button:SetText(L.OPTIONS)
-    button:SetPoint("LEFT", CliqueButtonProfiles, "RIGHT", 3, 0)
+    button:SetPoint("LEFT", CliqueButtonFrames, "RIGHT", 3, 0)
     button:SetScript("OnClick", buttonFunc)
 
     local button = CreateFrame("Button", "CliqueButtonDelete", CliqueFrame, "UIPanelButtonGrayTemplate")
@@ -598,6 +598,13 @@ function Clique:CreateOptionsFrame()
     button:SetWidth(60)
     button:SetText(L.EDIT)
     button:SetPoint("LEFT", CliqueButtonDelete, "RIGHT", 3, 0)
+    button:SetScript("OnClick", buttonFunc)
+
+    local button = CreateFrame("Button", "CliqueButtonMax", CliqueFrame, "UIPanelButtonGrayTemplate")
+    button:SetHeight(24)
+    button:SetWidth(60)
+    button:SetText(L.MAX)
+    button:SetPoint("LEFT", CliqueButtonEdit, "RIGHT", 3, 0)
     button:SetScript("OnClick", buttonFunc)
 
     -- Buttons for text list scroll frame
@@ -1113,9 +1120,15 @@ function Clique:ValidateButtons()
     if entry then
         CliqueButtonDelete:Enable()
         CliqueButtonEdit:Enable()
+        if entry.type == "spell" and entry.arg2 then
+            CliqueButtonMax:Enable()
+        else
+            CliqueButtonMax:Disable()
+        end
     else
         CliqueButtonDelete:Disable()
         CliqueButtonEdit:Disable()
+        CliqueButtonMax:Disable()
     end
 
     -- This should always be enabled
@@ -1228,6 +1241,16 @@ function Clique:ButtonOnClick(button, mouseButton)
         entry = nil
 
         self:ListScrollUpdate()
+
+    elseif button == CliqueButtonMax then
+        -- Delete rank information from spell, and then re-apply all bindings.
+        if entry.type == "spell" then
+            entry.arg2 = nil
+            self:DeleteAttributeAllFrames(entry)
+            self:RebuildOOCSet()
+            self:PLAYER_REGEN_ENABLED()
+        end
+
     elseif button == CliqueButtonClose then
         self:Toggle()
     elseif button == CliqueTextButtonClose then

@@ -116,6 +116,7 @@ if GetLocale() then
     L.OPTIONS = "Options"
     L.DELETE = "Delete"
     L.EDIT = "Edit"
+    L.MAX = "Max"
     L.PREVIEW = "Preview"
     L.SET = "Set"
     L.NEW = "New"
