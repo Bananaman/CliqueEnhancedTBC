@@ -230,8 +230,8 @@ function Clique:SpellBookButtonPressed(frame, button)
         end
     end
 
-    -- Build the structure
-    local t = {
+    -- Build the clickset entry's data structure.
+    local entry = {
         ["button"] = button,
         ["modifier"] = self:GetModifierText(),
         ["texture"] = GetSpellTexture(id, SpellBookFrame.bookType),
@@ -241,16 +241,16 @@ function Clique:SpellBookButtonPressed(frame, button)
     }
 
     -- Enforce string keys for CheckBinding purposes, which uses "type+value" equality to detect duplicates.
-    -- NOTE: Technically, t.modifier is always a string/empty string, so the result is always
+    -- NOTE: Technically, entry.modifier is always a string/empty string, so the result is always
     -- a string even if "button" is numeric. But we want to be 100000% sure that it's a string!
-    local key = tostring(t.modifier .. t.button)
+    local key = tostring(entry.modifier .. entry.button)
 
     if self:CheckBinding(key) then
         StaticPopup_Show("CLIQUE_BINDING_PROBLEM")
         return
     end
 
-    self.editSet[key] = t
+    self.editSet[key] = entry
     self:ListScrollUpdate()
     self:RebuildOOCSet()
     self:PLAYER_REGEN_ENABLED()
