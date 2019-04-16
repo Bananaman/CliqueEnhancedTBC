@@ -41,6 +41,7 @@ function Clique:Enable()
         -- Char: Values which are independently stored per-character, regardless of which profile each character uses.
         char = {
             downClick = false,
+            autoBindMaxRank = true,
             easterEgg = false,
         },
     }
@@ -206,12 +207,28 @@ function Clique:SpellBookButtonPressed(frame, button)
         button = self:GetButtonNumber(button)
     end
 
+    -- Skip this click if binding wasn't detected properly.
+    if button == "" then return; end
+
     -- Automatically remove rank variable if spell has no rank info,
     -- otherwise we'd end up with parenthesis like "spell: Attack ()".
     if rank == "" then rank = nil; end
 
-    -- Skip this click if binding wasn't detected properly.
-    if button == "" then return; end
+    -- Handle the "Bind spells as rankless when clicking highest rank" user configuration option.
+    if rank and self.db.char.autoBindMaxRank then
+        -- Analyze the next spell after the one that was clicked...
+        local nextSpellId = id + 1
+        local nextName
+        if nextSpellId <= MAX_SPELLS then -- Only grab next name if within Blizzard's legal spell ID range. NOTE: MAX_SPELLS = 1024.
+            nextName = GetSpellName(nextSpellId, SpellBookFrame.bookType)
+        end
+
+        -- If the NEXT spell is ANYTHING other than EXACTLY THE SAME SPELL NAME, even allowing "next name" to be empty/nil values (such
+        -- as at the end of the spell list), then we understand that the user has clicked on their final rank of the given spell.
+        if name ~= nextName then
+            rank = nil
+        end
+    end
 
     -- Build the structure
     local t = {
