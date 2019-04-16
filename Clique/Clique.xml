@@ -67,7 +67,7 @@
                     </Anchor>
                 </Anchors>
                 <ScrollChild>
-                    <EditBox name="$parentEditBox" multiLine="true" letters="255" autoFocus="false">
+                    <EditBox name="$parentEditBox" multiLine="true" letters="1024" autoFocus="false">
                         <Size>
                             <AbsDimension x="270" y="90"/>
                         </Size>

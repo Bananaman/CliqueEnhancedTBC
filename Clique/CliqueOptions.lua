@@ -1433,6 +1433,9 @@ function Clique:ButtonOnClick(button, mouseButton)
             issue = "You must specify EITHER a macro index, or macro text, not both."
         elseif entry.type == "macro" and not arg1 and not arg2 then
             issue = "You must supply either a macro index, or macro text."
+        elseif entry.type == "macro" and arg2 and arg2:len() > 1024 then -- Blizzard allows up to 1024 characters in the "macrotext" attribute!
+            -- NOTE: This is just for extra safety. The "CliqueEditTemplate" already has a hard typing-limit of 1024, making long text impossible.
+            issue = "Your custom macro cannot be longer than 1024 characters.  You are using " .. arg2:len() .. " characters."
         elseif entry.type == "actionbar" and not arg1 then
             issue = "You must supply an action bar to change to."
         end
