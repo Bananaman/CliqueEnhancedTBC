@@ -1061,7 +1061,7 @@ function Clique:ListScrollUpdate()
     Clique:SortList()
     local clickCasts = self.sortList
     local offset = FauxScrollFrame_GetOffset(CliqueListScroll)
-    FauxScrollFrame_Update(CliqueListScroll, table.getn(clickCasts), NUM_ENTRIES, ENTRY_SIZE)
+    FauxScrollFrame_Update(CliqueListScroll, #clickCasts, NUM_ENTRIES, ENTRY_SIZE)
 
     if not CliqueListScroll:IsShown() then
         CliqueFrame:SetWidth(400)
@@ -1072,7 +1072,7 @@ function Clique:ListScrollUpdate()
     for i=1,NUM_ENTRIES do
         idx = offset + i
         button = _G["CliqueList"..i]
-        if idx <= table.getn(clickCasts) then
+        if idx <= #clickCasts then
             Clique:FillListEntry(button,idx)
             button:Show()
             if idx == self.listSelected then
@@ -1216,7 +1216,7 @@ function Clique:ButtonOnClick(button, mouseButton)
         end
 
         self.editSet[entry.modifier..entry.button] = nil
-        local len = table.getn(self.sortList) - 1
+        local len = #self.sortList - 1
 
         if self.listSelected > len then
             self.listSelected = len
