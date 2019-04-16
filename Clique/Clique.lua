@@ -399,7 +399,7 @@ function Clique:ApplyClickSet(name, frame)
         end
     else
         for modifier,entry in pairs(set) do
-            self:SetAction(entry)
+            self:SetAttributeAllFrames(entry)
         end
     end
 end
@@ -413,7 +413,7 @@ function Clique:RemoveClickSet(name, frame)
         end
     else
         for modifier,entry in pairs(set) do
-            self:DeleteAction(entry)
+            self:DeleteAttributeAllFrames(entry)
         end
     end
 end
@@ -608,7 +608,7 @@ function Clique:DeleteAttribute(entry, frame)
     frame:SetAttribute(entry.modifier..entry.type..button, nil)
 end
 
-function Clique:SetAction(entry)
+function Clique:SetAttributeAllFrames(entry)
     for frame,enabled in pairs(self.ccframes) do
         if enabled then
             self:SetAttribute(entry, frame)
@@ -616,8 +616,8 @@ function Clique:SetAction(entry)
     end
 end
 
-function Clique:DeleteAction(entry)
-    for frame in pairs(self.ccframes) do
+function Clique:DeleteAttributeAllFrames(entry)
+    for frame,enabled in pairs(self.ccframes) do
         self:DeleteAttribute(entry, frame)
     end
 end

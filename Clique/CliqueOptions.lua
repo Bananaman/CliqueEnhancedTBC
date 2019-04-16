@@ -1222,7 +1222,7 @@ function Clique:ButtonOnClick(button, mouseButton)
             self.listSelected = len
         end
 
-        self:DeleteAction(entry)
+        self:DeleteAttributeAllFrames(entry)
         self:RebuildOOCSet()
         self:PLAYER_REGEN_ENABLED()
         entry = nil
@@ -1450,7 +1450,7 @@ function Clique:ButtonOnClick(button, mouseButton)
         if self.editEntry then
             local key = self.editEntry.modifier..self.editEntry.button
             self.editSet[key] = nil
-            self:DeleteAction(self.editEntry)
+            self:DeleteAttributeAllFrames(self.editEntry)
             self.editEntry = nil
         end
 
