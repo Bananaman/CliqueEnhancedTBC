@@ -10,7 +10,6 @@ local pairs = genv.pairs
 
 local NUM_ENTRIES = 10
 local ENTRY_SIZE = 35
-local work = {}
 
 function Clique:OptionsOnLoad()
     -- Create a set of buttons to hook the SpellbookFrame
@@ -529,6 +528,7 @@ function Clique:CreateOptionsFrame()
     local font = CliqueDropDown:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     font:SetText("Click Set:")
     font:SetPoint("RIGHT", CliqueDropDown, "LEFT", 5, 3)
+
     -- Button Creations
     local buttonFunc = function(self, button) Clique:ButtonOnClick(self, button) end
 
@@ -1057,7 +1057,7 @@ function Clique:CreateOptionsFrame()
     CliqueHelpText:SetPoint("CENTER", 0, 0)
 
     self.sortList = {}
-    self.listSelected = 0
+    self.listSelected = 0 -- Clear visual selection in list.
 end
 
 function Clique:ListScrollUpdate()
@@ -1506,35 +1506,65 @@ local click_func = function()
     end
 end
 
-function Clique:DropDown_Initialize()
-    local info = {}
+local work = {}
 
-    for k,v in pairs(work) do
+function Clique:DropDown_Initialize()
+    -- This initializer is executed every time the user opens the dropdown menu.
+    local info
+    for i,setName in ipairs(work) do
         info = {}
-        info.text = v
-        info.value = self.clicksets[v]
+        info.text = setName
+        info.value = setName
         info.func = click_func
         UIDropDownMenu_AddButton(info)
     end
 end
 
 function Clique:DropDown_OnClick(listButton)
-    UIDropDownMenu_SetSelectedValue(CliqueDropDown, listButton.value)
-    Clique.editSet = listButton.value
-    self.listSelected = 0
-    Clique:ListScrollUpdate()
+    -- Link the "editSet" table to the chosen clickset, and refresh the visual list.
+    local newEditSet = self.clicksets[listButton.value]
+    if newEditSet then
+        self.editSet = newEditSet
+        self.listSelected = 0 -- Clear visual selection in list.
+        self:ListScrollUpdate()
+        self:DropDown_SelectEditSet()
+    end
+end
+
+function Clique:DropDown_SelectEditSet()
+    if not CliqueDropDown then return; end
+
+    -- Attempt to find the human-readable name of the currently active "editSet".
+    local selectValue
+    for setName,setData in pairs(self.clicksets) do
+        if setData == self.editSet then
+            selectValue = setName
+            break
+        end
+    end
+
+    if selectValue then
+        -- Visually select that item in the dropdown menu. NOTE: This doesn't trigger any click-handlers.
+        UIDropDownMenu_SetSelectedValue(CliqueDropDown, selectValue)
+    else
+        -- If we somehow couldn't find the "editSet" in the list of clicksets, let's just clear the dropdown menu selection.
+        UIDropDownMenu_ClearAll(CliqueDropDown)
+    end
 end
 
 function Clique:DropDown_OnShow(frame)
+    -- Build a sorted list of clickset KEYS. Does not link to the actual data!
     work = {}
-    for k,v in pairs(self.clicksets) do
-        table.insert(work, k)
+    for setName,setData in pairs(self.clicksets) do
+        table.insert(work, setName)
     end
     table.sort(work)
 
+    -- Attach "initializer" function which re-builds the linked list of clicksets *every time* the
+    -- user clicks on the menu dropdown, which ensures it *always* links to the latest profile data.
     UIDropDownMenu_Initialize(frame, function() Clique:DropDown_Initialize() end);
-    UIDropDownMenu_SetSelectedValue(frame, self.editSet)
-    Clique:ListScrollUpdate()
+    self:DropDown_SelectEditSet()
+    self:ListScrollUpdate()
 end
 
 function Clique:CustomBinding_OnClick(frame)

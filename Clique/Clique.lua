@@ -512,6 +512,7 @@ local function applyCurrentProfile()
     Clique.textlistSelected = nil
     Clique:TextListScrollUpdate()
     Clique:ListScrollUpdate()
+    Clique:DropDown_SelectEditSet() -- Ensure dropdown selection matches the active clickset.
 
     -- Update and apply the clickset.
     Clique:RebuildOOCSet()
