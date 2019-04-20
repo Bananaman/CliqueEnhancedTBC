@@ -1234,10 +1234,7 @@ function Clique:ButtonOnClick(button, mouseButton)
     local entry = self.sortList[self.listSelected]
 
     if button == CliqueButtonDelete then
-        if InCombatLockdown() then
-            StaticPopup_Show("CLIQUE_COMBAT_LOCKDOWN")
-            return
-        end
+        if InCombatLockdown() then return end
 
         -- If the user had selected the last list entry, set selection to "remaining" last entry.
         local len = #self.sortList - 1
@@ -1255,6 +1252,8 @@ function Clique:ButtonOnClick(button, mouseButton)
         self:PLAYER_REGEN_ENABLED()
 
     elseif button == CliqueButtonMax then
+        if InCombatLockdown() then return end
+
         -- Delete rank information from spell, and then re-apply all bindings.
         if entry.type == "spell" then
             entry.arg2 = nil
@@ -1288,6 +1287,8 @@ function Clique:ButtonOnClick(button, mouseButton)
             CliqueOptionsFrame:Show()
         end
     elseif button == CliqueButtonCustom then
+        if InCombatLockdown() then return end
+
         if CliqueCustomFrame:IsVisible() then
             CliqueCustomFrame:Hide()
         else
@@ -1338,6 +1339,8 @@ function Clique:ButtonOnClick(button, mouseButton)
         local button = _G["CliqueTextList"..selected]
         self.db:DeleteProfile(button.realValue)
     elseif button == CliqueButtonEdit then
+        if InCombatLockdown() then return end
+
         -- Make a copy of the entry that we want to edit.
         self.customEntry = {}
         for k,v in pairs(entry) do
@@ -1386,6 +1389,8 @@ function Clique:ButtonOnClick(button, mouseButton)
         self:CustomRadio()
 
     elseif button == CliqueCustomButtonSave then
+        if InCombatLockdown() then return end
+
         local entry = self.customEntry
 
         -- Read values from all single-line textboxes. Most actions only use a FEW of these.
@@ -1806,15 +1811,6 @@ StaticPopupDialogs["CLIQUE_BINDING_PROBLEM"] = {
     hideOnEscape = 1
 }
 
-StaticPopupDialogs["CLIQUE_COMBAT_LOCKDOWN"] = {
-    text = "You are currently in combat.  You cannot make changes to your click casting while in combat.",
-    button1 = TEXT(OKAY),
-    OnAccept = function()
-    end,
-    timeout = 0,
-    hideOnEscape = 1
-}
-
 StaticPopupDialogs["CLIQUE_NEW_PROFILE"] = {
     text = TEXT("Enter the name of a new profile you'd like to create"),
     button1 = TEXT(OKAY),
@@ -1856,53 +1852,6 @@ StaticPopupDialogs["CLIQUE_NEW_PROFILE"] = {
         local editBox = _G[this:GetParent():GetName().."EditBox"];
         local txt = editBox:GetText()
         if #txt > 0 then
-            _G[this:GetParent():GetName().."Button1"]:Enable();
-        else
-            _G[this:GetParent():GetName().."Button1"]:Disable();
-        end
-    end,
-    EditBoxOnEscapePressed = function()
-        this:GetParent():Hide();
-        ClearCursor();
-    end
-}
-
-StaticPopupDialogs["CLIQUE_DELETE_PROFILE"] = {
-    text = TEXT("Enter the name of a profile you'd like to delete"),
-    button1 = TEXT(OKAY),
-    button2 = TEXT(CANCEL),
-    OnAccept = function()
-        Clique.db:DeleteProfile(_G[this:GetName().."EditBox"]:GetText())
-        Clique:DropDownProfile_OnShow()
-    end,
-    timeout = 0,
-    whileDead = 1,
-    exclusive = 1,
-    showAlert = 1,
-    hideOnEscape = 1,
-    hasEditBox = 1,
-    maxLetters = 32,
-    OnShow = function()
-        _G[this:GetName().."Button1"]:Disable();
-        _G[this:GetName().."EditBox"]:SetFocus();
-    end,
-    OnHide = function()
-        if ( ChatFrameEditBox:IsVisible() ) then
-            ChatFrameEditBox:SetFocus();
-        end
-        _G[this:GetName().."EditBox"]:SetText("");
-    end,
-    EditBoxOnEnterPressed = function()
-        if ( _G[this:GetParent():GetName().."Button1"]:IsEnabled() == 1 ) then
-            Clique.db:DeleteProfile(this:GetText())
-            Clique:DropDownProfile_OnShow()
-            this:GetParent():Hide();
-        end
-    end,
-    EditBoxOnTextChanged = function ()
-        local editBox = _G[this:GetParent():GetName().."EditBox"];
-        local txt = editBox:GetText()
-        if Clique.db.profiles[txt] then
             _G[this:GetParent():GetName().."Button1"]:Enable();
         else
             _G[this:GetParent():GetName().."Button1"]:Disable();
