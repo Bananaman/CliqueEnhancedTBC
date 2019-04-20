@@ -1467,18 +1467,23 @@ function Clique:ButtonOnClick(button, mouseButton)
             issue = "You must select an action type."
         elseif not entry.button then
             issue = "You must set a click-binding."
-        elseif entry.type == "action" and not entry.arg1 then
+        elseif entry.type == "action" and not arg1 then
             issue = "You must supply an action button number when creating a custom \"action\"."
-        elseif entry.type == "pet" and not entry.arg1 then
+        elseif entry.type == "pet" and not arg1 then
             issue = "You must supply a pet action button number when creating a custom action \"pet\"."
-        elseif entry.type == "spell" and not (entry.arg1 or (entry.arg2 and entry.arg3) or entry.arg4) then
-            issue = "You must supply either a spell name and optionally an item slot/bag or name to consume when creating a \"spell\" action."
-        elseif entry.type == "spell" and type(entry.arg1) == "string" and IsPassiveSpell(entry.arg1) then
+        elseif entry.type == "spell" and not arg1 then
+            -- NOTE: We can't demand that BOTH arg2 and arg3 (bag AND slot) are set, since arg2 is also used
+            -- for optionally setting the spell rank (such as "Rank 2"), in which case arg3 should be empty.
+            -- And the same goes for arg4 (target item name) or arg5 (target unit), since they're optional.
+            issue = "You must supply a spell name and optionally an item slot/bag or item name to consume when creating a \"spell\" action."
+        elseif entry.type == "spell" and type(arg1) == "string" and IsPassiveSpell(arg1) then
             issue = "You cannot bind passive spells."
+        elseif entry.type == "item" and arg1 and arg2 and entry.arg3 then
+            issue = "You must specify EITHER a bag/slot, or an item name to use, but not both."
         elseif entry.type == "item" and not ((entry.arg1 and entry.arg2) or entry.arg3) then
             issue = "You must supply either a bag/slot, or an item name to use."
         elseif entry.type == "macro" and arg1 and arg2 then
-            issue = "You must specify EITHER a macro index, or macro text, not both."
+            issue = "You must specify EITHER a macro index, or macro text, but not both."
         elseif entry.type == "macro" and not arg1 and not arg2 then
             issue = "You must supply either a macro index, or macro text."
         elseif entry.type == "macro" and arg2 and arg2:len() > 1024 then -- Blizzard allows up to 1024 characters in the "macrotext" attribute!
