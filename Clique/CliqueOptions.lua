@@ -1227,8 +1227,8 @@ function Clique:FillListEntry(frame, idx)
         frame.name:SetText(string.format("Assist Unit: %s", entry.arg1 and arg1 or "(Clicked)"))
     elseif entry.type == "click" then -- "Click Button"
         frame.name:SetText(string.format("Click Button: %s", arg1))
-    elseif entry.type == "menu" then -- "Show Menu"
-        frame.name:SetText("Show Menu")
+    elseif entry.type == "menu" then -- "Show Unit Menu"
+        frame.name:SetText("Show Unit Menu")
     else
         frame.name:SetText("MISSING \"" .. entry.type .. "\" FORMAT!") -- Lets us see if we're missing some type handler.
     end

@@ -58,7 +58,7 @@ if GetLocale() then
     L.ACTION_FOCUS = "Set Focus"
     L.ACTION_ASSIST = "Assist Unit"
     L.ACTION_CLICK = "Click Button"
-    L.ACTION_MENU = "Show Menu"
+    L.ACTION_MENU = "Show Unit Menu"
 
     L.HELP_TEXT               = "Welcome to Clique.  For basic operation, you can navigate the spellbook and decide what spell you'd like to bind to a specific click.  Then click on that spell with whatever click-binding you would like.  For example, navigate to \"Flash Heal\" and shift-LeftClick on it to bind that spell to Shift-LeftClick."
     L.CUSTOM_HELP             = "This is the Clique custom edit screen.  From here you can configure any of the combinations that the UI makes available to us in response to clicks.  Select a base action from the left column.  You can then click on the button below to set the binding you'd like, and then supply the arguments required (if any)."
