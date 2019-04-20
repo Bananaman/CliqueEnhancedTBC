@@ -1482,6 +1482,8 @@ function Clique:ButtonOnClick(button, mouseButton)
             issue = "Your custom macro cannot be longer than 1024 characters.  You are using " .. arg2:len() .. " characters."
         elseif entry.type == "actionbar" and not arg1 then
             issue = "You must supply an action bar to change to."
+        elseif entry.type == "click" and not arg1 then
+            issue = "You must supply the name of a button to click."
         end
 
         if issue then
