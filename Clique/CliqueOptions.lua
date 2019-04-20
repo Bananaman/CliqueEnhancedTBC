@@ -1176,8 +1176,10 @@ function Clique:FillListEntry(frame, idx)
     local arg4 = tostring(entry.arg4)
     local arg5 = tostring(entry.arg5)
 
+    -- NOTE: All formatting uses "%s" string coercion, since "%d" and similar would break if the data
+    -- isn't of the expected type (such as if the user made a custom action with a word in a number-field).
     if entry.type == "action" then
-        frame.name:SetText(string.format("Action Button %d%s", arg1, entry.arg2 and (" on " .. arg2) or ""))
+        frame.name:SetText(string.format("Action Button %s%s", arg1, entry.arg2 and (" on " .. arg2) or ""))
     elseif entry.type == "actionbar" then
         frame.name:SetText(string.format("Action Bar: %s", arg1))
     elseif entry.type == "pet" then
@@ -1185,7 +1187,7 @@ function Clique:FillListEntry(frame, idx)
         if entry.arg2 then
             target = " on " .. arg2
         end
-        frame.name:SetText(string.format("Pet Action %d%s", arg1, target))
+        frame.name:SetText(string.format("Pet Action %s%s", arg1, target))
     elseif entry.type == "spell" then
         -- Determine what spell rank to display, if any...
         local rank
@@ -1219,7 +1221,7 @@ function Clique:FillListEntry(frame, idx)
         frame.name:SetText(string.format("Assist Unit: %s", entry.arg1 and arg1 or "(Clicked)"))
     elseif entry.type == "item" then
         if entry.arg1 then
-            frame.name:SetText(string.format("Item: %d,%d", arg1, arg2))
+            frame.name:SetText(string.format("Item: %s,%s", arg1, arg2))
         elseif entry.arg3 then
             frame.name:SetText(string.format("Item: %s", arg3))
         end
