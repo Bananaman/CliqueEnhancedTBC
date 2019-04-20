@@ -49,8 +49,8 @@ function Clique:OptionsOnLoad()
     CliquePulloutTab:SetScript("OnEnter", function() local i = 1 end)
     CliquePulloutTab:SetScript("OnShow", function()
         Clique.inuse = false
-        for k,v in pairs(self.clicksets) do
-            if next(v) then -- Contains elements.
+        for setName,setData in pairs(Clique.clicksets) do
+            if next(setData) then -- Contains elements.
                 Clique.inuse = true
                 break
             end
@@ -509,6 +509,10 @@ function Clique:CreateOptionsFrame()
     CliqueDropDown:SetID(1)
     CliqueDropDown:SetPoint("TOPRIGHT", -115, -25)
     CliqueDropDown:SetScript("OnShow", function(self) Clique:DropDown_OnShow(self) end)
+
+    -- Attach "initializer" function which adds the clickset buttons *every time* the
+    -- user opens the menu dropdown, which ensures it *always* shows the latest profile data.
+    UIDropDownMenu_Initialize(CliqueDropDown, function() Clique:DropDown_Initialize() end)
 
     CliqueDropDownButton:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
@@ -1144,8 +1148,8 @@ function Clique:ValidateButtons()
 
     -- Disable the help text
     Clique.inuse = false
-    for k,v in pairs(self.clicksets) do
-        if next(v) then -- Contains elements.
+    for setName,setData in pairs(self.clicksets) do
+        if next(setData) then -- Contains elements.
             Clique.inuse = true
             break
         end
@@ -1499,24 +1503,50 @@ function Clique:ButtonOnClick(button, mouseButton)
     Clique:ListScrollUpdate()
 end
 
-local click_func = function()
-    local listButton = this
+local sortedClickSets -- Starts out as nil.
+
+local function sortedClickSets_SortFn(a, b)
+    return a.text < b.text
+end
+
+function Clique:DropDown_BuildSortedSetList()
+    -- Build a list of clicksets.
+    sortedClickSets = {}
+    for setName,setData in pairs(self.clicksets) do
+        table.insert(sortedClickSets, {
+            -- Dropdown menu text: Localized name of set, otherwise fallback to raw setname (ie. "HARMFUL").
+            text = L["CLICKSET_" .. setName] or setName,
+            -- Dropdown menu value: The actual set-table key (ie. "HARMFUL") that we want the menu item to refer to...
+            -- NOTE: Does NOT link to the actual data! We do NOT want tight coupling! This is just the table KEY of the desired set!
+            value = setName,
+        })
+    end
+
+    -- Sort the data by localized menu text.
+    table.sort(sortedClickSets, sortedClickSets_SortFn)
+end
+
+local function DropDown_ClickFn()
+    local listButton = this -- Fetch the clicked dropdown menu item.
     if listButton then
-        Clique:DropDown_OnClick(listButton)
+        Clique:DropDown_OnClick(listButton) -- Call our actual handler.
     end
 end
 
-local work = {}
-
 function Clique:DropDown_Initialize()
     -- This initializer is executed every time the user opens the dropdown menu.
+    if not sortedClickSets then
+        -- We only build the sorted list of sets once. Because the user's game-locale cannot change
+        -- within the same game session, and the list of available sets is identical for all profiles.
+        Clique:DropDown_BuildSortedSetList()
+    end
     local info
-    for i,setName in ipairs(work) do
+    for i,v in ipairs(sortedClickSets) do
         info = {}
-        info.text = setName
-        info.value = setName
-        info.func = click_func
-        UIDropDownMenu_AddButton(info)
+        info.text = v.text
+        info.value = v.value
+        info.func = DropDown_ClickFn
+        UIDropDownMenu_AddButton(info) -- Adds the button to the currently-open menu.
     end
 end
 
@@ -1534,7 +1564,7 @@ end
 function Clique:DropDown_SelectEditSet()
     if not CliqueDropDown then return; end
 
-    -- Attempt to find the human-readable name of the currently active "editSet".
+    -- Attempt to find the internal key-name (ie. "HARMFUL") of the currently active "editSet".
     local selectValue
     for setName,setData in pairs(self.clicksets) do
         if setData == self.editSet then
@@ -1553,18 +1583,10 @@ function Clique:DropDown_SelectEditSet()
 end
 
 function Clique:DropDown_OnShow(frame)
-    -- Build a sorted list of clickset KEYS. Does not link to the actual data!
-    work = {}
-    for setName,setData in pairs(self.clicksets) do
-        table.insert(work, setName)
-    end
-    table.sort(work)
-
-    -- Attach "initializer" function which re-builds the linked list of clicksets *every time* the
-    -- user clicks on the menu dropdown, which ensures it *always* links to the latest profile data.
-    UIDropDownMenu_Initialize(frame, function() Clique:DropDown_Initialize() end);
-    self:DropDown_SelectEditSet()
-    self:ListScrollUpdate()
+    -- NOTE: This OnShow handler runs EVERY time the Clique frame re-appears after being invisible
+    -- for ANY reason; even from things such as the spellbook being hidden and then re-appearing.
+    self:DropDown_SelectEditSet() -- Ensure the dropdown selection matches the active "editset".
+    self:ListScrollUpdate() -- Refresh the sorted list of actions contained in the active "editset".
 end
 
 function Clique:CustomBinding_OnClick(frame)
@@ -1572,9 +1594,9 @@ function Clique:CustomBinding_OnClick(frame)
     local mod = self:GetModifierText()
     local button = arg1
 
-    if self.editSet == self.clicksets[L.CLICKSET_HARMFUL] then
+    if self.editSet == self.clicksets.HARMFUL then
         button = string.format("%s%d", "harmbutton", self:GetButtonNumber(button))
-    elseif self.editSet == self.clicksets[L.CLICKSET_HELPFUL] then
+    elseif self.editSet == self.clicksets.HELPFUL then
         button = string.format("%s%d", "helpbutton", self:GetButtonNumber(button))
     else
         button = self:GetButtonNumber(button)

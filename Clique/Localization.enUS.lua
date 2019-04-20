@@ -11,8 +11,8 @@ if GetLocale() then
     L.CAST_FORMAT             = "%s(Rank %s)"
 
     L.CLICKSET_DEFAULT        = "Default"
-    L.CLICKSET_HARMFUL        = "Harmful actions"
-    L.CLICKSET_HELPFUL        = "Helpful actions"
+    L.CLICKSET_HARMFUL        = "Harmful Actions"
+    L.CLICKSET_HELPFUL        = "Helpful Actions"
     L.CLICKSET_OOC            = "Out of Combat"
     L.CLICKSET_BEARFORM       = "Bear Form"
     L.CLICKSET_CATFORM        = "Cat Form"

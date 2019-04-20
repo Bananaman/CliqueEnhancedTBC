@@ -10,8 +10,8 @@ if GetLocale() == "koKR" then
     L.CAST_FORMAT             = "%s(%d 레벨)"
 
 --	L.CLICKSET_DEFAULT        = "Default"
---	L.CLICKSET_HARMFUL        = "Harmful actions"
---	L.CLICKSET_HELPFUL        = "Helpful actions"
+--	L.CLICKSET_HARMFUL        = "Harmful Actions"
+--	L.CLICKSET_HELPFUL        = "Helpful Actions"
 --	L.CLICKSET_OOC            = "Out of Combat"
 
 --	L.BINDING_NOT_DEFINED     = "Binding not defined"

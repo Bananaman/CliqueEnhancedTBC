@@ -11,6 +11,7 @@ if Clique.version then Clique.version = strtrim(Clique.version) end
 if Clique.version == "wowi:revision" then Clique.version = "SVN" end
 
 local L = Clique.Locals
+local GAME_LANGUAGE = GetLocale() or "enUS"
 
 local pairs = pairs
 local ipairs = ipairs
@@ -29,10 +30,15 @@ function Clique:Enable()
         -- Profile: Values which are shared by all characters that use a specific profile.
         profile = {
             clicksets = {
-                [L.CLICKSET_DEFAULT] = {},
-                [L.CLICKSET_HARMFUL] = {},
-                [L.CLICKSET_HELPFUL] = {},
-                [L.CLICKSET_OOC] = {},
+                -- NOTE: It's EXTREMELY important that we separate the player's clicksets by game language,
+                -- because every item and every spell in the game are bound/cast in the game's active language,
+                -- and will NOT work on different languages! So we therefore index the bindings per-language!
+                [GAME_LANGUAGE] = { -- NOTE: This language variable is reliable (it will NEVER change during runtime).
+                    DEFAULT = {},
+                    HARMFUL = {},
+                    HELPFUL = {},
+                    OOC = {},
+                },
             },
             blacklist = {
             },
@@ -197,9 +203,9 @@ function Clique:SpellBookButtonPressed(frame, button)
     end
 
     -- Transform the clicked mousebutton into a usable format.
-    if self.editSet == self.clicksets[L.CLICKSET_HARMFUL] then
+    if self.editSet == self.clicksets.HARMFUL then
         button = string.format("%s%d", "harmbutton", self:GetButtonNumber(button))
-    elseif self.editSet == self.clicksets[L.CLICKSET_HELPFUL] then
+    elseif self.editSet == self.clicksets.HELPFUL then
         button = string.format("%s%d", "helpbutton", self:GetButtonNumber(button))
     else
         button = self:GetButtonNumber(button)
@@ -259,17 +265,17 @@ function Clique:SpellBookButtonPressed(frame, button)
 end
 
 function Clique:UseOOCSet(frame) -- Arg is optional. Affects ALL frames if not provided.
-    self:RemoveClickSet(L.CLICKSET_DEFAULT, frame)
-    self:RemoveClickSet(L.CLICKSET_HARMFUL, frame)
-    self:RemoveClickSet(L.CLICKSET_HELPFUL, frame)
+    self:RemoveClickSet(self.clicksets.DEFAULT, frame)
+    self:RemoveClickSet(self.clicksets.HARMFUL, frame)
+    self:RemoveClickSet(self.clicksets.HELPFUL, frame)
     self:ApplyClickSet(self.ooc_clickset, frame)
 end
 
 function Clique:UseCombatSet(frame) -- Arg is optional. Affects ALL frames if not provided.
     self:RemoveClickSet(self.ooc_clickset, frame)
-    self:ApplyClickSet(L.CLICKSET_DEFAULT, frame)
-    self:ApplyClickSet(L.CLICKSET_HARMFUL, frame)
-    self:ApplyClickSet(L.CLICKSET_HELPFUL, frame)
+    self:ApplyClickSet(self.clicksets.DEFAULT, frame)
+    self:ApplyClickSet(self.clicksets.HARMFUL, frame)
+    self:ApplyClickSet(self.clicksets.HELPFUL, frame)
 end
 
 -- Player is LEAVING combat
@@ -300,10 +306,10 @@ local function wipe(t) -- Emulates "table.wipe".
 end
 
 function Clique:RebuildOOCSet()
-    local ooc = self.clicksets[L.CLICKSET_OOC]
-    local default = self.clicksets[L.CLICKSET_DEFAULT]
-    local harm = self.clicksets[L.CLICKSET_HARMFUL]
-    local help = self.clicksets[L.CLICKSET_HELPFUL]
+    local ooc = self.clicksets.OOC
+    local default = self.clicksets.DEFAULT
+    local harm = self.clicksets.HARMFUL
+    local help = self.clicksets.HELPFUL
 
     -- The binding priority order is OOC > HELP + HARM > DEFAULT (used as final fallback).
     --
@@ -409,29 +415,29 @@ function Clique:RegisterFrame(frame)
     self:UseOOCSet(frame)
 end
 
-function Clique:ApplyClickSet(name, frame)
-    local set = self.clicksets[name] or name
+function Clique:ApplyClickSet(setData, frame)
+    assert(type(setData) == "table", "Bad argument #1 to 'Clique:ApplyClickSet' (table expected)")
 
     if frame then
-        for modifier,entry in pairs(set) do
+        for modifier,entry in pairs(setData) do
             self:SetAttribute(entry, frame)
         end
     else
-        for modifier,entry in pairs(set) do
+        for modifier,entry in pairs(setData) do
             self:SetAttributeAllFrames(entry)
         end
     end
 end
 
-function Clique:RemoveClickSet(name, frame)
-    local set = self.clicksets[name] or name
+function Clique:RemoveClickSet(setData, frame)
+    assert(type(setData) == "table", "Bad argument #1 to 'Clique:RemoveClickSet' (table expected)")
 
     if frame then
-        for modifier,entry in pairs(set) do
+        for modifier,entry in pairs(setData) do
             self:DeleteAttribute(entry, frame)
         end
     else
-        for modifier,entry in pairs(set) do
+        for modifier,entry in pairs(setData) do
             self:DeleteAttributeAllFrames(entry)
         end
     end
@@ -454,8 +460,8 @@ function Clique:UnregisterFrame(frame)
         Clique:TextListScrollUpdate()
     end
 
-    for name,set in pairs(self.clicksets) do
-        for modifier,entry in pairs(set) do
+    for setName,setData in pairs(self.clicksets) do
+        for modifier,entry in pairs(setData) do
             self:DeleteAttribute(entry, frame)
         end
     end
@@ -465,43 +471,99 @@ function Clique:UnregisterFrame(frame)
 end
 
 function Clique:LinkProfileData()
-    -- Set all database links to the profile.
-    self.profile = self.db.profile
-    self.clicksets = self.profile.clicksets
-    self.editSet = self.clicksets[L.CLICKSET_DEFAULT]
+    -- Create preliminary, local references while we work on preparing the data for usage.
+    local profile = self.db.profile
+    local clicksets = profile.clicksets[GAME_LANGUAGE] -- Use the clickset for the current game language.
 
-    -- Upgrade any outdated data to newer format.
-    if (self.profile.tooltips ~= nil) then
+    -- Upgrade any outdated data to newer format, before linking...
+
+    -- UPGRADE: Handle outdated "tooltips" preference.
+    if (profile.tooltips ~= nil) then
         -- The "unit tooltips" setting has been moved from being a per-profile value, to instead
         -- being a per-character value (which is less annoying, since otherwise you'd have to
         -- constantly toggle the option on/off whenever you switch profile). We'll migrate the
         -- setting directly into the matching per-character database, if one already exists.
         -- Otherwise, if the profile name is formatted like a "Character - Realm" profile, then
         -- we'll create the per-character database if it's missing (we may have some false positives
-        -- for non-existent characters, but that's no big deal since a character-database is tiny).
+        -- if profile names use dashes, but that's no big deal since a character-database is tiny).
         -- NOTE: And yes... if the player was using a custom-named profile such as "Heal Set" or
         -- are using a profile from another character, then we don't auto-migrate "tooltips" into
         -- their current (playing) per-character database here, but they can enable it themselves.
-        local charDB = CliqueDB.char[self.db.keys.profile]
+        local profileName = self.db.keys.profile -- Exact name of the currently loaded profile.
+        local charDB = CliqueDB.char[profileName]
         if charDB then
             -- Character database already exists named after this profile. Migrate directly.
-            charDB.unitTooltips = self.profile.tooltips
-        elseif strlen(self.db.keys.profile) >= 5 and string.find(self.db.keys.profile, " - ") then
+            charDB.unitTooltips = profile.tooltips
+        elseif strlen(profileName) >= 5 and string.find(profileName, " - ") then
             -- The profile name is at least 5 characters long and contains " - ", so we can pretty
             -- safely assume that it's a profile named after a character, such as "Someone - Somerealm",
             -- but they don't have a per-character database yet. We'll therefore create one.
-            CliqueDB.char[self.db.keys.profile] = {
-                unitTooltips = self.profile.tooltips
+            CliqueDB.char[profileName] = {
+                unitTooltips = profile.tooltips
             }
         end
-        self.profile.tooltips = nil -- Regardless of migration, we'll clear the profile's old value.
+        profile.tooltips = nil -- Regardless of migration, we'll clear the profile's old value.
     end
+
+    -- UPGRADE: Move old clicksets into the robust, clean and modern locale-specific system instead.
+    --
+    -- The old system stored clicksets as "profile.clicksets[translated table key] = data", such as
+    -- "profile.clicksets['Out of Combat']", which was EXTREMELY FRAGILE for multiple reasons. If
+    -- you EVER changed the translation (even changing the CASE of a SINGLE letter), the old clicksets
+    -- would be "lost forever" since the data keys would no longer match. And furthermore, if you had
+    -- identical key-translations in multiple game client locales, then their data tables would mix
+    -- and overwrite each other, despite the fact that all bindings MUST be kept separated between
+    -- locales (since all spells/items are localized in each game language and therefore the bindings
+    -- are not portable between different game locales).
+    --
+    -- To solve all of this, the new system now stores all data robustly and independently as
+    -- "profile.clicksets[GAME_LANGUAGE][NEUTRAL SET KEY]", such as "profile.clicksets.enUS.HARMFUL".
+    -- This ensures that there's ZERO risk of clashes between the clicksets of different locales,
+    -- and also ensures that we are now free to edit the visual GUI translations without ever losing
+    -- our bindings, since they are now keyed in a neutral, completely locale-independent way.
+    --
+    -- NOTE: We do the upgrade by performing a case-insensitive (lowercase) search for the translated
+    -- keys in the old/main "profile.clicksets" table. If we find them, then we write their data to the
+    -- modern "profile.clicksets.enUS.OOC" (or similar) table instead, and erase the old table. The
+    -- main reason for doing a case-insensitive search is that the patch where this new, modern system
+    -- was introduced changes the letter-case of several translations, and we want older Clique users
+    -- to have all of their data properly upgraded. For now, this ensures that everything is preserved.
+    -- But if we ever change translations in a SIGNIFICANT way in the future, then the user would lose
+    -- their data IF they HAVEN'T used this modern version of Clique (to upgrade their DB) before that.
+    -- (And actually, no data would ever be "truly lost" even in that case. A determined user could
+    -- still manually edit their WoW "SavedVariables" file to move the data to the new system by hand.)
+    --
+    -- NOTE: During migration, we only migrate old keys that exist in the CURRENT GAME LOCALE's
+    -- list of translations. If there are keys from other locales, they'd only be migrated when
+    -- the player runs the game with that locale instead.
+    local lowerKeyMap
+    for k,v in pairs(profile.clicksets) do -- Scan the main "clicksets" table, which MAY contain old data.
+        if not string.find(k, '^[a-z][a-z][A-Z][A-Z]$') then -- Don't add our modern "GetLocale()" based set-keys ("ooOO" format).
+            if not lowerKeyMap then lowerKeyMap = {}; end -- Create keymap table on-demand.
+            lowerKeyMap[strlower(k)] = k -- Link the lowercase name to the ACTUAL table key.
+        end
+    end
+    if lowerKeyMap then -- This only proceeds if entries exist in lowercase keymap...
+        for setName,setData in pairs(clicksets) do -- Scan the modern, locale-specific "clicksets" sub-table, to get all MODERN keys.
+            local translation = strlower(L["CLICKSET_" .. setName] or "") -- Generate lowercase version of TRANSLATED (to current locale) clickset name.
+            if type(translation) == "string" and translation ~= "" and lowerKeyMap[translation] then
+                -- Alright, we've found an outdated clickset table key stored under the old system... Move its data to the modern system instead.
+                clicksets[setName] = profile.clicksets[lowerKeyMap[translation]] -- We KNOW the "profile.clicksets" key exists, since map was built from it...
+                profile.clicksets[lowerKeyMap[translation]] = nil -- Delete the old table...
+            end
+        end
+    end
+
+    -- Set all database links to the profile.
+    self.profile = profile
+    self.clicksets = clicksets
+    self.editSet = clicksets.DEFAULT
 end
 
 local function applyCurrentProfile()
     -- Remove existing click bindings.
-    for name,set in pairs(Clique.clicksets) do
-        Clique:RemoveClickSet(set)
+    for setName,setData in pairs(Clique.clicksets) do
+        Clique:RemoveClickSet(setData)
     end
     Clique:RemoveClickSet(Clique.ooc_clickset)
 
@@ -732,10 +794,10 @@ function Clique:RebuildTooltipData()
 
     -- Build the plain OOC, DEFAULT, HARM and HELP tooltip sets. The latter three sets are the IN COMBAT bindings.
     -- NOTE: We mainly build this plain data for use in constructing the other "merged" sets.
-    tt_Build(tt.ooc, self.clicksets[L.CLICKSET_OOC])
-    tt_Build(tt.default, self.clicksets[L.CLICKSET_DEFAULT])
-    tt_Build(tt.harm, self.clicksets[L.CLICKSET_HARMFUL])
-    tt_Build(tt.help, self.clicksets[L.CLICKSET_HELPFUL])
+    tt_Build(tt.ooc, self.clicksets.OOC)
+    tt_Build(tt.default, self.clicksets.DEFAULT)
+    tt_Build(tt.harm, self.clicksets.HARMFUL)
+    tt_Build(tt.help, self.clicksets.HELPFUL)
 
     -- Build the "unified" OUT OF COMBAT tooltip set, from the pre-built "ooc_clickset" (which prioritizes "OOC > HELP + HARM > DEFAULT"),
     -- which is ONLY for use in "/clique showbindings". This set accurately contains all keys that are bound while out of combat, and
