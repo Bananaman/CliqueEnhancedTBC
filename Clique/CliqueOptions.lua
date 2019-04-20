@@ -1441,21 +1441,21 @@ function Clique:ButtonOnClick(button, mouseButton)
         end
 
         -- Replace any item-links arguments with just the (first-seen) item name instead.
-        local pattern = "Hitem.+|h%[(.+)%]|h"
-        if entry.arg1 and string.find(entry.arg1, pattern) then
-            entry.arg1 = select(3, string.find(entry.arg1, pattern))
-        end
-        if entry.arg2 and string.find(entry.arg2, pattern) then
-            entry.arg2 = select(3, string.find(entry.arg2, pattern))
-        end
-        if entry.arg3 and string.find(entry.arg3, pattern) then
-            entry.arg3 = select(3, string.find(entry.arg3, pattern))
-        end
-        if entry.arg4 and string.find(entry.arg4, pattern) then
-            entry.arg4 = select(3, string.find(entry.arg4, pattern))
-        end
-        if entry.arg5 and string.find(entry.arg5, pattern) then
-            entry.arg5 = select(3, string.find(entry.arg5, pattern))
+        local pattern = "Hitem.-|h%[(.-)%]|h" -- Finds the earliest, shortest-length match in the string.
+        for i=1,5 do
+            local k = "arg"..i
+            if entry[k] then
+                local pos1, pos2 = string.find(entry[k], pattern)
+                if pos1 then
+                    -- This argument contained an item-link. Attempt to parse its details.
+                    -- NOTE: The itemName will be nil if the item somehow couldn't be parsed.
+                    local itemLink = string.sub(entry[k], pos1, pos2)
+                    local itemName = GetItemInfo(itemLink)
+
+                    -- Set the entry argument to just the pure item-name.
+                    entry[k] = itemName
+                end
+            end
         end
 
         -- Validate the final result before saving the action...
