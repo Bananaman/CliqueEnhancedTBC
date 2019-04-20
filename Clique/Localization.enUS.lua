@@ -70,7 +70,7 @@ if GetLocale() then
     L.BS_ACTION_ARG1_LABEL = "Button Number:"
     L.BS_ACTION_ARG2_LABEL = "(Optional) Unit:"
 
-    L.BS_PET_HELP = "Simulate a click on an pet's action button.  Specify the number of the button."
+    L.BS_PET_HELP = "Simulate a click on your pet's action buttons.  Specify the number of the button."
     L.BS_PET_ARG1_LABEL = "Pet Button Number:"
     L.BS_PET_ARG2_LABEL = "(Optional) Unit:"
 
