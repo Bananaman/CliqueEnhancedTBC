@@ -1469,6 +1469,8 @@ function Clique:ButtonOnClick(button, mouseButton)
             issue = "You must supply a pet action button number when creating a custom action \"pet\"."
         elseif entry.type == "spell" and not (entry.arg1 or (entry.arg2 and entry.arg3) or entry.arg4) then
             issue = "You must supply either a spell name and optionally an item slot/bag or name to consume when creating a \"spell\" action."
+        elseif entry.type == "spell" and type(entry.arg1) == "string" and IsPassiveSpell(entry.arg1) then
+            issue = "You cannot bind passive spells."
         elseif entry.type == "item" and not ((entry.arg1 and entry.arg2) or entry.arg3) then
             issue = "You must supply either a bag/slot, or an item name to use."
         elseif entry.type == "macro" and arg1 and arg2 then
