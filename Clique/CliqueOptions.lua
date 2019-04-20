@@ -1178,17 +1178,17 @@ function Clique:FillListEntry(frame, idx)
 
     -- NOTE: All formatting uses "%s" string coercion, since "%d" and similar would break if the data
     -- isn't of the expected type (such as if the user made a custom action with a word in a number-field).
-    if entry.type == "action" then
-        frame.name:SetText(string.format("Action Button %s%s", arg1, entry.arg2 and (" on " .. arg2) or ""))
-    elseif entry.type == "actionbar" then
+    if entry.type == "actionbar" then -- "Change ActionBar"
         frame.name:SetText(string.format("Action Bar: %s", arg1))
-    elseif entry.type == "pet" then
+    elseif entry.type == "action" then -- "Action Button"
+        frame.name:SetText(string.format("Action Button %s%s", arg1, entry.arg2 and (" on " .. arg2) or ""))
+    elseif entry.type == "pet" then -- "Pet Action Button"
         local target = ""
         if entry.arg2 then
             target = " on " .. arg2
         end
         frame.name:SetText(string.format("Pet Action %s%s", arg1, target))
-    elseif entry.type == "spell" then
+    elseif entry.type == "spell" then -- "Cast Spell"
         -- Determine what spell rank to display, if any...
         local rank
         if entry.arg2 then
@@ -1209,24 +1209,28 @@ function Clique:FillListEntry(frame, idx)
         else
             frame.name:SetText(string.format("%s%s", arg1, entry.arg5 and " on " .. arg5 or ""))
         end
-    elseif entry.type == "menu" then
-        frame.name:SetText("Show Menu")
-    elseif entry.type == "stop" then
-        frame.name:SetText("Stop Casting Current Spell")
-    elseif entry.type == "target" then
-        frame.name:SetText(string.format("Target Unit: %s", entry.arg1 and arg1 or "(Clicked)"))
-    elseif entry.type == "focus" then
-        frame.name:SetText(string.format("Set Focus Unit: %s", entry.arg1 and arg1 or "(Clicked)"))
-    elseif entry.type == "assist" then
-        frame.name:SetText(string.format("Assist Unit: %s", entry.arg1 and arg1 or "(Clicked)"))
-    elseif entry.type == "item" then
+    elseif entry.type == "item" then -- "Use Item"
         if entry.arg1 then
             frame.name:SetText(string.format("Item: %s,%s", arg1, arg2))
         elseif entry.arg3 then
             frame.name:SetText(string.format("Item: %s", arg3))
         end
-    elseif entry.type == "macro" then
+    elseif entry.type == "macro" then -- "Run Custom Macro"
         frame.name:SetText(string.format("Macro: %s", entry.arg1 and arg1 or string.sub(arg2, 1, 20)))
+    elseif entry.type == "stop" then -- "Stop Casting"
+        frame.name:SetText("Stop Casting Current Spell")
+    elseif entry.type == "target" then -- "Target Unit"
+        frame.name:SetText(string.format("Target Unit: %s", entry.arg1 and arg1 or "(Clicked)"))
+    elseif entry.type == "focus" then -- "Set Focus"
+        frame.name:SetText(string.format("Set Focus Unit: %s", entry.arg1 and arg1 or "(Clicked)"))
+    elseif entry.type == "assist" then -- "Assist Unit"
+        frame.name:SetText(string.format("Assist Unit: %s", entry.arg1 and arg1 or "(Clicked)"))
+    elseif entry.type == "click" then -- "Click Button"
+        frame.name:SetText(string.format("Click Button: %s", arg1))
+    elseif entry.type == "menu" then -- "Show Menu"
+        frame.name:SetText("Show Menu")
+    else
+        frame.name:SetText("MISSING \"" .. entry.type .. "\" FORMAT!") -- Lets us see if we're missing some type handler.
     end
 
     frame:Show()
