@@ -138,17 +138,9 @@ function Clique:Enable()
         end
     end
 
-    local oldotsu = GameTooltip:GetScript("OnTooltipSetUnit")
-    if oldotsu then
-        GameTooltip:SetScript("OnTooltipSetUnit", function(...)
-            Clique:AddTooltipLines()
-            return oldotsu(...)
-        end)
-    else
-        GameTooltip:SetScript("OnTooltipSetUnit", function(...)
-            Clique:AddTooltipLines()
-        end)
-    end
+    self:HookScript(GameTooltip, "OnTooltipSetUnit", function()
+        Clique:AddTooltipLines()
+    end)
 
     hooksecurefunc("CreateFrame", raidFunc)
 
@@ -737,7 +729,7 @@ end
 
 function Clique:ShowAttributes()
     self:Print("Enabled enhanced debugging.")
-    PlayerFrame:SetScript("OnAttributeChanged", function(self, ...) Clique:Print(self:GetName(), ...) end)
+    self:HookScript(PlayerFrame, "OnAttributeChanged", function(self, ...) Clique:Print(self:GetName(), ...) end)
     self:Print("Unregistering:")
     self:UnregisterFrame(PlayerFrame)
     self:Print("Registering:")

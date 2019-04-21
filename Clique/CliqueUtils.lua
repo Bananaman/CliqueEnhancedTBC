@@ -81,3 +81,15 @@ end
 function Clique:CheckBinding(key)
     return key and self.editSet[key] -- Returns binding-data if "key" provided and exists in set, otherwise nil.
 end
+
+function Clique:HookScript(frame, script, fn)
+    -- Safely sets or hooks script handlers on a frame, without tainting Blizzard's scripts or overwriting any existing scripts.
+    -- NOTE: "HookScript" securely adds actions after the existing handler, without overwriting/tainting the original script,
+    -- but it cannot execute (does nothing) if no script exists. So we'll dynamically "SetScript" instead in that case.
+    if (frame:GetScript(script)) then
+        frame:HookScript(script, fn);
+    else
+        frame:SetScript(script, fn);
+    end
+end
+
