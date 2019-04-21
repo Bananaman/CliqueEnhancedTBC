@@ -181,10 +181,8 @@ function Clique:Toggle()
     else
         if CliqueFrame:IsVisible() then
             CliqueFrame:Hide()
-            CliquePulloutTab:SetChecked(nil)
         else
             CliqueFrame:Show()
-            CliquePulloutTab:SetChecked(true)
         end
     end
 
@@ -288,9 +286,14 @@ function Clique:CreateOptionsFrame()
         self:SetFrameLevel(parent:GetFrameLevel() + 5)
         Clique:UpdateOptionsTitle()
         Clique:ToggleSpellBookButtons()
+        CliquePulloutTab:SetChecked(true)
     end)
 
-    CliqueFrame:SetScript("OnHide", function() Clique:ToggleSpellBookButtons() end)
+    CliqueFrame:SetScript("OnHide", function()
+        Clique:ToggleSpellBookButtons()
+        CliquePulloutTab:SetChecked(nil)
+    end)
+
     CliqueFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     CliqueFrame:SetScript("OnEvent", function(self, event, ...)
         if self:IsVisible() then
