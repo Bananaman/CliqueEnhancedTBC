@@ -146,7 +146,7 @@ function Clique:Enable()
 
     -- Create our slash command
     self.cmd = self:InitializeSlashCommand("Clique commands", "CLIQUE", "clique")
-    self.cmd:RegisterSlashHandler("debug - Enables extra messages for debugging purposes", "debug", "ShowAttributes")
+    self.cmd:RegisterSlashHandler("debug - Enables extra messages for debugging purposes", "debug", "EnableDebug")
     self.cmd:InjectDBCommands(self.db, "copy", "delete", "list", "reset", "set")
     self.cmd:RegisterSlashHandler("tooltip - Enables binding lists in tooltips.", "tooltip", "ToggleTooltip")
     self.cmd:RegisterSlashHandler("showbindings - Shows a window that contains the current bindings", "showbindings", "ShowBindings")
@@ -257,17 +257,33 @@ function Clique:SpellBookButtonPressed(frame, button)
 end
 
 function Clique:UseOOCSet(frame) -- Arg is optional. Affects ALL frames if not provided.
+    local startTime
+    if self.debug then startTime = GetTime(); end
+
     self:RemoveClickSet(self.clicksets.DEFAULT, frame)
     self:RemoveClickSet(self.clicksets.HARMFUL, frame)
     self:RemoveClickSet(self.clicksets.HELPFUL, frame)
     self:ApplyClickSet(self.ooc_clickset, frame)
+
+    if self.debug then
+        local elapsed = (GetTime() - startTime) * 1000
+        self:Print("OOC: Applied to "..(frame and (frame:GetName() or "a frame") or "all frames").." in "..string.format("%.2f", elapsed).." milliseconds.");
+    end
 end
 
 function Clique:UseCombatSet(frame) -- Arg is optional. Affects ALL frames if not provided.
+    local startTime
+    if self.debug then startTime = GetTime(); end
+
     self:RemoveClickSet(self.ooc_clickset, frame)
     self:ApplyClickSet(self.clicksets.DEFAULT, frame)
     self:ApplyClickSet(self.clicksets.HARMFUL, frame)
     self:ApplyClickSet(self.clicksets.HELPFUL, frame)
+
+    if self.debug then
+        local elapsed = (GetTime() - startTime) * 1000
+        self:Print("COMBAT: Applied to "..(frame and (frame:GetName() or "a frame") or "all frames").." in "..string.format("%.2f", elapsed).." milliseconds.");
+    end
 end
 
 -- Player is LEAVING combat
@@ -731,13 +747,32 @@ function Clique:DeleteAttributeAllFrames(entry)
     end
 end
 
-function Clique:ShowAttributes()
-    self:Print("Enabled enhanced debugging.")
-    self:HookScript(PlayerFrame, "OnAttributeChanged", function(self, ...) Clique:Print(self:GetName(), ...) end)
+function Clique:EnableDebug()
+    -- Inject the "attribute changed" hook if we haven't already injected it.
+    if not self.debugAttributesHooked then
+        self:HookScript(PlayerFrame, "OnAttributeChanged", function(self, ...)
+            if Clique.debugAttributesShow then -- Only print while flag is enabled.
+                Clique:Print(self:GetName(), ...)
+            end
+        end)
+        self.debugAttributesHooked = true
+    end
+
+    -- Disable standard debugging, and enable attribute showing, then do a full unregister
+    -- and register, to show all attributes that are being set on the PlayerFrame.
+    -- NOTE: We disable normal debugging to avoid seeing the "attribute benchmark" lines,
+    -- since the attribute setting is severely slowed down by PRINTING every attribute.
+    self.debug = false
+    self.debugAttributesShow = true
     self:Print("Unregistering:")
     self:UnregisterFrame(PlayerFrame)
     self:Print("Registering:")
     self:RegisterFrame(PlayerFrame)
+
+    -- Now disable attribute showing, and enable standard debugging again.
+    self.debugAttributesShow = false
+    self.debug = true
+    self:Print("Enabled enhanced debugging.")
 end
 
 Clique.tooltipData = {
