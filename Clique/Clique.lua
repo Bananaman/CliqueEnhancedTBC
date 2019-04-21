@@ -866,8 +866,11 @@ function Clique:AddTooltipLines()
     local frame = GetMouseFocus()
     if (not frame) or (not self.ccframes[frame]) then return end
 
+    local unit = select(2, GameTooltip:GetUnit()) -- Exact tooltip unit such as "target", "player" or "party1".
+    if (not unit) or (not UnitExists(unit)) then return end
+
     local tt = self.tooltipData
-    local unitIsHarmful = UnitCanAttack("player", "mouseover")
+    local unitIsHarmful = UnitCanAttack("player", unit)
     local inCombat = UnitAffectingCombat("player")
     local helpSet = inCombat and tt.merged_combat_help or tt.merged_ooc_help
     local harmSet = inCombat and tt.merged_combat_harm or tt.merged_ooc_harm
