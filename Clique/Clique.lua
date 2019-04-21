@@ -128,21 +128,22 @@ function Clique:Enable()
     self:RegisterEvent("PLAYER_REGEN_DISABLED")
     self:RegisterEvent("LEARNED_SPELL_IN_TAB")
 
-    -- Securehook CreateFrame to catch any new raid frames
-    local raidFunc = function(type, name, parent, template)
+    -- Securely hook CreateFrame to catch any new Blizzard raid frames.
+    -- NOTE: These Blizzard frames are created by the player pressing "O", going to "Raid",
+    -- and then clicking and dragging a raid-party number onto the screen to see that group.
+    hooksecurefunc("CreateFrame", function(type, name, parent, template)
         if template == "RaidPulloutButtonTemplate" then
             local btn = _G[name.."ClearButton"]
             if btn then
                 self:RegisterFrame(btn)
             end
         end
-    end
+    end)
 
+    -- Register unit tooltip hook, to add our binding-help tooltips (if enabled by the user).
     self:HookScript(GameTooltip, "OnTooltipSetUnit", function()
         Clique:AddTooltipLines()
     end)
-
-    hooksecurefunc("CreateFrame", raidFunc)
 
     -- Create our slash command
     self.cmd = self:InitializeSlashCommand("Clique commands", "CLIQUE", "clique")
