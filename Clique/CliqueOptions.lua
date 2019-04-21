@@ -1399,6 +1399,10 @@ function Clique:ButtonOnClick(button, mouseButton)
 
         local entry = self.customEntry
 
+        -- Certain code-paths below can set a texture value here, which will automatically
+        -- be used as the saved action's texture, if no other icon has been manually set.
+        local autoTexture
+
         -- Read values from all single-line textboxes. Most actions only use a FEW of these.
         -- NOTE: We also trim leading/trailing whitespace, since that isn't supposed to exist
         -- in these values, and would interfere with "empty string" detection below, as well
@@ -1448,12 +1452,18 @@ function Clique:ButtonOnClick(button, mouseButton)
                 local pos1, pos2 = string.find(entry[k], pattern)
                 if pos1 then
                     -- This argument contained an item-link. Attempt to parse its details.
-                    -- NOTE: The itemName will be nil if the item somehow couldn't be parsed.
+                    -- NOTE: Both itemName and itemTexture will be nil if the item somehow couldn't be parsed.
                     local itemLink = string.sub(entry[k], pos1, pos2)
-                    local itemName = GetItemInfo(itemLink)
+                    local itemName, _, _, _, _, _, _, _, _, itemTexture = GetItemInfo(itemLink)
 
                     -- Set the entry argument to just the pure item-name.
                     entry[k] = itemName
+
+                    -- Automatically use the item as texture, if this is the "Item Name" (3rd) field of a "Use Item" action.
+                    -- NOTE: This is the highest-accuracy auto-texture, since we're detecting it from the item link itself.
+                    if i == 3 and entry.type == "item" then
+                        autoTexture = itemTexture
+                    end
                 end
             end
         end
@@ -1499,6 +1509,58 @@ function Clique:ButtonOnClick(button, mouseButton)
             StaticPopupDialogs["CLIQUE_CANT_SAVE"].text = issue
             StaticPopup_Show("CLIQUE_CANT_SAVE")
             return
+        end
+
+        -- Attempt to auto-extract textures for various common actions, if "autoTexture" hasn't already been set above.
+        if not autoTexture then
+            local foundTexture
+            if entry.type == "actionbar" then -- "Change ActionBar"
+                foundTexture = [[Interface\Icons\Ability_CheapShot]]
+            elseif entry.type == "action" then -- "Action Button"
+                foundTexture = [[Interface\Icons\Ability_Creature_Cursed_04]]
+            elseif entry.type == "pet" then -- "Pet Action Button"
+                foundTexture = [[Interface\Icons\Ability_Seal]]
+            elseif entry.type == "spell" then -- "Cast Spell"
+                -- NOTE: If arg1 (spell name) isn't provided, we won't even attempt to auto-extract an icon. And if we can't find the spell, we won't get an icon either.
+                if entry.arg1 then -- "Cast Spell" with an exact spell name.
+                    -- GetSpellTexture searches the player AND pet spellbooks for the max-rank (since there's no "(Rank X)" suffix) icon of that spell.
+                    foundTexture = GetSpellTexture(tostring(entry.arg1)) -- NOTE: Search is case-insensitive.
+                end
+            elseif entry.type == "item" then -- "Use Item"
+                -- NOTE: If arg3 (item name) isn't provided, we won't even attempt to auto-extract an icon. And if we can't find the item, we won't get an icon either.
+                if entry.arg3 then -- "Use Item" with an exact item name.
+                    -- GetItemInfo searches the client's whole cache (all items seen in bag, bank, mail, etc) for an item with that exact name.
+                    foundTexture = select(10, GetItemInfo(tostring(entry.arg3))) -- NOTE: Search is case-insensitive.
+                end
+            elseif entry.type == "macro" then -- "Run Custom Macro"
+                foundTexture = [[Interface\Icons\Spell_Nature_Tranquility]]
+            elseif entry.type == "stop" then -- "Stop Casting"
+                foundTexture = [[Interface\Icons\Spell_ChargeNegative]]
+            elseif entry.type == "target" then -- "Target Unit"
+                foundTexture = [[Interface\Icons\Ability_Rogue_FindWeakness]]
+            elseif entry.type == "focus" then -- "Set Focus"
+                foundTexture = [[Interface\Icons\Spell_Holy_SpellWarding]]
+            elseif entry.type == "assist" then -- "Assist Unit"
+                foundTexture = [[Interface\Icons\Spell_Holy_SearingLightPriest]]
+            elseif entry.type == "click" then -- "Click Button"
+                foundTexture = [[Interface\Icons\Spell_Holy_ImprovedResistanceAuras]]
+            elseif entry.type == "menu" then -- "Show Unit Menu"
+                foundTexture = [[Interface\Icons\Spell_Shadow_Teleport]]
+            end
+            if type(foundTexture) == "string" and foundTexture:len() > 0 then
+                autoTexture = foundTexture
+            end
+        end
+
+        -- Erase the entry's existing texture value if it's set to the "Interface\Icons\INV_Misc_QuestionMark" ("?") icon.
+        -- NOTE: That can only happen if the user clicks the icon to edit it and then selects the literal "?" icon.
+        if entry.texture == [[Interface\Icons\INV_Misc_QuestionMark]] then
+            entry.texture = nil
+        end
+
+        -- Apply the automatically detected texture (if available), but only if the user hasn't set a non-"?" manual texture already.
+        if autoTexture and (not entry.texture) then
+            entry.texture = autoTexture
         end
 
         -- If we are currently editing an existing entry, then delete that entry.
