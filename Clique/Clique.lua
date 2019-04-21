@@ -282,11 +282,15 @@ function Clique:PLAYER_REGEN_ENABLED()
     end
 
     self:UseOOCSet()
+
+    self:RefreshUnitTooltip()
 end
 
 -- Player is ENTERING combat
 function Clique:PLAYER_REGEN_DISABLED()
     self:UseCombatSet()
+
+    self:RefreshUnitTooltip()
 end
 
 local function wipe(t) -- Emulates "table.wipe".
@@ -858,6 +862,20 @@ function Clique:RebuildTooltipData()
     if CliqueTooltip and CliqueTooltip:IsVisible() then
         self:ShowBindings(nil, true)
     end
+end
+
+function Clique:RefreshUnitTooltip()
+    if not self.db.char.unitTooltips then return end
+
+    if not GameTooltip:IsVisible() then return end
+
+    local unit = select(2, GameTooltip:GetUnit()) -- Exact tooltip unit such as "target", "player" or "party1".
+    if (not unit) or (not UnitExists(unit)) then return end
+
+    -- The game's tooltip is VISIBLE and is DISPLAYING A UNIT, so we'll simply set it to the exact same
+    -- unit again, which will cause a complete refresh of the tooltip data. This ensures that the player
+    -- sees the appropriate in-combat/out-of-combat bindings based on current combat state.
+    GameTooltip:SetUnit(unit)
 end
 
 function Clique:AddTooltipLines()
