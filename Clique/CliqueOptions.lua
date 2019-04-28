@@ -261,6 +261,83 @@ function Clique:SkinFrame(frame)
     frame.footer:SetPoint("BOTTOMRIGHT", frame.footerRight, "BOTTOMLEFT");
 end
 
+function Clique:FixFrameOrder(force)
+    -- Create local variable, and abort if Clique's main frame is missing.
+    local cf = CliqueFrame;
+    if not cf then return; end
+
+    -- The Clique frame often appears together with things like the MacroFrame
+    -- or CharacterFrame. And since Clique anchors to the right of the spellbook,
+    -- it would overlap any UI Panels/frames that also sit to the right of the
+    -- spellbook. That causes ugly Z-ordering issues where various widgets at
+    -- deep nesting within their parent will have a higher FrameLevel than other
+    -- windows, so that those widgets show up THROUGH each other's frames;
+    -- for example, seeing "Macro Editor" buttons poking through the Clique GUI!
+    -- NOTE: We fix this by putting Clique in the "HIGH" strata AND giving it
+    -- a higher than normal FrameLevel. Blizzard's frames are mostly (all?)
+    -- "MEDIUM", but the next strata ("HIGH") isn't enough to prevent certain
+    -- lower-frame, deeply nested widgets from popping "through" Clique's frames,
+    -- unless we ALSO boost the FrameLevel a bit. So we use both techniques here.
+    -- NOTE: We run this "FixFrameOrder" function on CliqueFrame "OnShow", to detect
+    -- whether strata/level/parent has changed. That's necessary just in case some
+    -- other addon changes the strata or parent of the Clique frame (in which case
+    -- the frame would inherit the new parent's strata and need fixing again). But
+    -- if no other addons touch the CliqueFrame, then THIS function only does its
+    -- work ONCE, since it doesn't need to do any adjustments on subsequent runs.
+    -- NOTE: "CliqueFrame.expected..." vars always start out nil, ensuring 1st run.
+    -- NOTE: Yeah... this function has LOOONG comments! Because the solution isn't
+    -- just a simple, straight-forward one... it needs a complete explanation! ;-)
+    local cfParent = cf:GetParent();
+    if (force
+        or cf:GetFrameStrata() ~= "HIGH"
+        or cf:GetFrameLevel() ~= cf.expectedFrameLevel
+        or cfParent ~= cf.expectedParent) then
+        -- Fix the main frame and remember the frame's current values so that
+        -- we can detect any changes and re-adjust everything when necessary.
+        if self.debug then self:Print("Adjusting Clique's frame ordering at "..GetTime().."."); end
+        cf:SetFrameStrata("HIGH");
+        local cliqueLevel = cfParent:GetFrameLevel() + 10;
+        cf:SetFrameLevel(cliqueLevel);
+        cf.expectedFrameLevel = cliqueLevel;
+        cf.expectedParent = cfParent;
+
+        -- When we fix Clique's main frame, we also need to fix its sub-windows.
+        -- Due to parent-hierarchy, they ALL auto-inherit the "HIGH" frame strata
+        -- when we set it above, but their frame elements will get rendered in
+        -- the wrong Z-order because all frames sit on the same strata and levels
+        -- due to their identical sub-frame nesting depth as children of CliqueFrame.
+        -- NOTE: We fix this by forcing each sub-frame X levels deeper so that
+        -- up to X-1 nested elem-depths won't poke through each other's frames.
+        -- NOTE: These numbers may SEEM large, but under normal circumstances
+        -- the CliqueFrame ends up at FrameLevel 11 (since it's parented to the
+        -- spellbook which is at level 1), and Clique's deepest sub-frame, the
+        -- CliqueOptionsFrame, ends up at level 31, which are both far less than
+        -- the game's "maximum" 127-ish soft-cap! And even if that cap COULD somehow
+        -- be reached, there's no problem since levels beyond the soft-cap just
+        -- cause the game client to gradually increase its soft-cap dynamically
+        -- (by +128 per attempt), albeit with a slight risk of "squashed" (lowered)
+        -- FrameLevel values each time that we attempt to set a too-big value,
+        -- IF we EVER do. But subsequent "OnShow" calls to "FixFrameOrder" would
+        -- just REPEAT the demand UNTIL the CliqueFrame finally ends up at the
+        -- desired FrameLevel (after the client has grown its soft-cap enough).
+        -- NOTE: Whenever we set the FrameLevel, all child-frames are automatically
+        -- updated by the adjusted amount compared to the old FrameLevel, which
+        -- means that there's no need to set levels of their child-frames manually.
+        if (CliqueCustomFrame) then -- Parented to "CliqueFrame". The "Custom Action" and "Edit" window.
+            CliqueCustomFrame:SetFrameLevel(cliqueLevel + 5);
+        end
+        if (CliqueIconSelectFrame) then -- Parented to "CliqueCustomFrame". The window which lets you choose a different icon for the binding.
+            CliqueIconSelectFrame:SetFrameLevel(cliqueLevel + 10);
+        end
+        if (CliqueTextListFrame) then -- Parented to "CliqueFrame", anchored to its right. Displays lists of texts such as "Frames" and "Profiles".
+            CliqueTextListFrame:SetFrameLevel(cliqueLevel + 15);
+        end
+        if (CliqueOptionsFrame) then -- Parented to "CliqueFrame". Displays the per-user options.
+            CliqueOptionsFrame:SetFrameLevel(cliqueLevel + 20);
+        end
+    end
+end
+
 function Clique:UpdateOptionsTitle()
     if (not CliqueFrame) or (not CliqueFrame.title) then return end
     CliqueFrame.title:SetText("Clique Enhanced v. " .. Clique.version .. " - " .. tostring(Clique.db.keys.profile));
@@ -282,8 +359,7 @@ function Clique:CreateOptionsFrame()
             Clique:Toggle()
             return
         end
-        local parent = self:GetParent()
-        self:SetFrameLevel(parent:GetFrameLevel() + 5)
+        Clique:FixFrameOrder()
         Clique:UpdateOptionsTitle()
         Clique:ToggleSpellBookButtons()
         CliquePulloutTab:SetChecked(true)
@@ -392,12 +468,6 @@ function Clique:CreateOptionsFrame()
     frame:SetWidth(250)
     frame:SetPoint("BOTTOMLEFT", CliqueFrame, "BOTTOMRIGHT", 0, 0)
     self:SkinFrame(frame)
-    frame:SetFrameStrata("HIGH")
-
-    frame:SetScript("OnShow", function(self)
-        local parent = self:GetParent()
-        self:SetFrameLevel(parent:GetFrameLevel() + 5)
-    end)
 
     local onclick = function(button)
         local offset = FauxScrollFrame_GetOffset(CliqueTextListScroll)
@@ -648,14 +718,11 @@ function Clique:CreateOptionsFrame()
     frame:SetWidth(300)
     frame:SetPoint("CENTER", 0, 0)
     self:SkinFrame(frame)
-    frame:SetFrameStrata("DIALOG")
     frame.title:SetText(L["Clique Options"])
     frame:Hide()
     self:CreateOptionsWidgets(frame)
 
     frame:SetScript("OnShow", function(self)
-        local parent = self:GetParent()
-        self:SetFrameLevel(parent:GetFrameLevel() + 5)
         self:refreshOptionsWidgets()
     end)
 
@@ -665,14 +732,8 @@ function Clique:CreateOptionsFrame()
     frame:SetWidth(450)
     frame:SetPoint("CENTER", 70, -50)
     self:SkinFrame(frame)
-    frame:SetFrameStrata("DIALOG")
     frame.title:SetText("Clique Custom Editor");
     frame:Hide()
-
-    frame:SetScript("OnShow", function(self)
-        local parent = self:GetParent()
-        self:SetFrameLevel(parent:GetFrameLevel() + 5)
-    end)
 
     -- Help text for Custom screen
 
@@ -933,7 +994,6 @@ function Clique:CreateOptionsFrame()
     CliqueIconSelectFrame:SetHeight(250)
     CliqueIconSelectFrame:SetPoint("CENTER",0,0)
     self:SkinFrame(CliqueIconSelectFrame)
-    CliqueIconSelectFrame:SetFrameStrata("DIALOG")
     CliqueIconSelectFrame.title:SetText("Select an icon")
     CliqueIconSelectFrame:Hide()
 
@@ -1049,8 +1109,6 @@ function Clique:CreateOptionsFrame()
     end)
 
     CliqueIconSelectFrame:SetScript("OnShow", function(self)
-        local parent = self:GetParent()
-        self:SetFrameLevel(parent:GetFrameLevel() + 5)
         Clique:UpdateIconFrame()
     end)
 
