@@ -1447,7 +1447,8 @@ function Clique:ButtonOnClick(button, mouseButton)
         -- if the player saves the custom editor changes.
         self.editEntry = entry
 
-    elseif button == CliqueCustomButtonCancel then
+    elseif button == CliqueCustomButtonCancel then -- NOTE: Also called by "CliqueCustomButtonSave" as its final action!
+        if CliqueIconSelectFrame then CliqueIconSelectFrame:Hide(); end -- Prevent lingering icon selector on next opening.
         CliqueCustomFrame:Hide()
         CliqueCustomButtonIcon.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
         CliqueCustomButtonBinding:SetText("Set Click Binding")
