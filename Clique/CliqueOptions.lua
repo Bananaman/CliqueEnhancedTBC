@@ -166,7 +166,7 @@ function Clique:LEARNED_SPELL_IN_TAB()
 end
 
 function Clique:ToggleSpellBookButtons()
-    local method = CliqueFrame:IsVisible() and "Show" or "Hide"
+    local method = CliqueFrame:IsShown() and "Show" or "Hide"
     local buttons = self.spellbuttons
     for i=1,12 do
         buttons[i][method](buttons[i])
@@ -179,7 +179,7 @@ function Clique:Toggle()
         CliqueFrame:Hide()
         CliqueFrame:Show()
     else
-        if CliqueFrame:IsVisible() then
+        if CliqueFrame:IsShown() then
             CliqueFrame:Hide()
         else
             CliqueFrame:Show()
@@ -372,7 +372,7 @@ function Clique:CreateOptionsFrame()
 
     CliqueFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     CliqueFrame:SetScript("OnEvent", function(self, event, ...)
-        if self:IsVisible() then
+        if self:IsShown() then
             Clique:Toggle()
         end
     end)
@@ -1348,7 +1348,7 @@ function Clique:ButtonOnClick(button, mouseButton)
         end
         self:ShowBindings(viewType)
     elseif button == CliqueButtonOptions then
-        if CliqueOptionsFrame:IsVisible() then
+        if CliqueOptionsFrame:IsShown() then
             CliqueOptionsFrame:Hide()
         else
             CliqueOptionsFrame:Show()
@@ -1356,13 +1356,13 @@ function Clique:ButtonOnClick(button, mouseButton)
     elseif button == CliqueButtonCustom then
         if InCombatLockdown() then return end
 
-        if CliqueCustomFrame:IsVisible() then
+        if CliqueCustomFrame:IsShown() then
             CliqueCustomFrame:Hide()
         else
             CliqueCustomFrame:Show()
         end
     elseif button == CliqueButtonFrames then
-        if CliqueTextListFrame:IsVisible() and self.textlist == "FRAMES" then
+        if CliqueTextListFrame:IsShown() and self.textlist == "FRAMES" then
             CliqueTextListFrame:Hide()
         else
             CliqueTextListFrame:Show()
@@ -1377,7 +1377,7 @@ function Clique:ButtonOnClick(button, mouseButton)
         CliqueTextListFrame.title:SetText("Clique Frame Editor")
         self.textlistSelected = nil
     elseif button == CliqueButtonProfiles then
-        if CliqueTextListFrame:IsVisible() and self.textlist == "PROFILES" then
+        if CliqueTextListFrame:IsShown() and self.textlist == "PROFILES" then
             CliqueTextListFrame:Hide()
         else
             CliqueTextListFrame:Show()
