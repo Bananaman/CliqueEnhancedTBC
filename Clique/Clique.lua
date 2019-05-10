@@ -185,7 +185,7 @@ function Clique:SpellBookButtonPressed(frame, button)
     end
 
     -- Get spell information.
-    local id = SpellBook_GetSpellID(this:GetParent():GetID());
+    local id = SpellBook_GetSpellID(frame:GetParent():GetID());
     local name, rank = GetSpellName(id, SpellBookFrame.bookType)
     if not name then return; end -- Abort if spell didn't exist...
 
