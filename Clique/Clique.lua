@@ -184,28 +184,51 @@ function Clique:SpellBookButtonPressed(frame, button)
         return
     end
 
-    -- Get spell information.
-    local id = SpellBook_GetSpellID(frame:GetParent():GetID());
-    local name, rank = GetSpellName(id, SpellBookFrame.bookType)
-    if not name then return; end -- Abort if spell didn't exist...
+    -- Get spell ID and book type.
+    -- NOTE: Blizzard's terrible function does no bounds/error-checking and naively returns "btnId+tabOffset+((pageNumber-1)*pageSize)".
+    local spellId = SpellBook_GetSpellID(frame:GetParent():GetID()) -- NOTE: Returns too-high spell numbers if no proper spell ID.
+    local bookType = SpellBookFrame.bookType
 
-    -- Refuse to bind Passive/Racial Passive spells, since those cannot be cast.
-    if IsPassiveSpell(id, SpellBookFrame.bookType) then
+    -- We can abort immediately if Blizzard has calculated an ID that's higher than their highest legal ID (1024) usable in APIs.
+    if spellId > MAX_SPELLS then return; end -- NOTE: We use Blizzard's "MAX_SPELLS" (1024) variable here.
+
+    -- Determine the maximum valid spell ID for this tab, using a technique based on Blizzard's "SpellBook_GetCurrentPage" and "SpellButton_UpdateButton".
+    local maxSpellId = 0
+    if bookType == BOOKTYPE_PET then
+        local numPetSpells = HasPetSpells() -- NOTE: Returns nil if the player has a pet with zero spells.
+        if type(numPetSpells) == "number" and numPetSpells > 0 then maxSpellId = numPetSpells; end
+    else -- Regular spells.
+        local _, _, offset, numSpells = GetSpellTabInfo(SpellBookFrame.selectedSkillLine or 1)
+        maxSpellId = offset + numSpells
+    end
+
+    -- Abort if the spell is out-of-bounds for the current spell tab/school.
+    -- NOTE: If we don't abort here, we could get "nil" spells or spells from subsequent tabs instead...
+    if spellId > maxSpellId then return; end
+
+    -- Now get the actual spell details.
+    local spellId = SpellBook_GetSpellID(frame:GetParent():GetID())
+    local name, rank = GetSpellName(spellId, bookType) -- NOTE: Returns nil if spell doesn't exist.
+    if not name then return; end -- Abort if spell somehow didn't exist...
+
+    -- Perform even more validation, by retrieving the spell's texture. If no texture exists, then it's an invalid spell slot ID despite checks above.
+    local texture = GetSpellTexture(spellId, bookType); -- NOTE: Returns nil if spell doesn't exist.
+    if not texture then return; end -- NOTE: This should never happen if we got a name above... it's just an extra failsafe.
+
+    -- Refuse to bind "Passive" or "Racial Passive" spells, since those cannot be cast.
+    if IsPassiveSpell(spellId, bookType) then
         StaticPopup_Show("CLIQUE_PASSIVE_SKILL")
         return
     end
 
-    -- Transform the clicked mousebutton into a usable format.
+    -- Transform the clicked mousebutton (such as "LeftButton") into a usable binding-format.
+    button = self:GetButtonNumber(button)
+    if button == "" then return; end -- Skip this click if mouse-button wasn't detected properly.
     if self.editSet == self.clicksets.HARMFUL then
-        button = string.format("%s%d", "harmbutton", self:GetButtonNumber(button))
+        button = string.format("%s%d", "harmbutton", button)
     elseif self.editSet == self.clicksets.HELPFUL then
-        button = string.format("%s%d", "helpbutton", self:GetButtonNumber(button))
-    else
-        button = self:GetButtonNumber(button)
+        button = string.format("%s%d", "helpbutton", button)
     end
-
-    -- Skip this click if mouse-button wasn't detected properly.
-    if button == "" then return; end
 
     -- Detect which modifier keys are held down, if any...
     local modifier = self:GetModifierText()
@@ -217,10 +240,10 @@ function Clique:SpellBookButtonPressed(frame, button)
     -- Handle the "Bind spells as rankless when clicking highest rank" user configuration option.
     if rank and self.db.char.autoBindMaxRank then
         -- Analyze the next spell after the one that was clicked...
-        local nextSpellId = id + 1
+        local nextSpellId = spellId + 1
         local nextName
         if nextSpellId <= MAX_SPELLS then -- Only grab next name if within Blizzard's legal spell ID range. NOTE: MAX_SPELLS = 1024.
-            nextName = GetSpellName(nextSpellId, SpellBookFrame.bookType)
+            nextName = GetSpellName(nextSpellId, bookType)
         end
 
         -- If the NEXT spell is ANYTHING other than EXACTLY THE SAME SPELL NAME, even allowing "next name" to be empty/nil values (such
@@ -244,7 +267,7 @@ function Clique:SpellBookButtonPressed(frame, button)
     local entry = {
         ["button"] = button,
         ["modifier"] = modifier,
-        ["texture"] = GetSpellTexture(id, SpellBookFrame.bookType),
+        ["texture"] = texture,
         ["type"] = "spell",
         ["arg1"] = name,
         ["arg2"] = rank,
