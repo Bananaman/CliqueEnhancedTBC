@@ -174,18 +174,26 @@ function Clique:ToggleSpellBookButtons()
 end
 
 function Clique:Toggle()
+    -- If we're in combat, refuse to toggle Clique, and instead just hide the frame if it's marked as shown.
+    if InCombatLockdown() then
+        if CliqueFrame and CliqueFrame:IsShown() then
+            CliqueFrame:Hide()
+        end
+        return
+    end
+
+    -- Create the Clique frame, or toggle on-screen visibility of the existing frame.
     if not CliqueFrame then
         Clique:CreateOptionsFrame()
         CliqueFrame:Hide()
         CliqueFrame:Show()
+    elseif CliqueFrame:IsShown() then
+        CliqueFrame:Hide()
     else
-        if CliqueFrame:IsShown() then
-            CliqueFrame:Hide()
-        else
-            CliqueFrame:Show()
-        end
+        CliqueFrame:Show()
     end
 
+    -- Toggle spellbook overlays based on Clique frame visibility, and update the list of bindings.
     Clique:ToggleSpellBookButtons()
     self:ListScrollUpdate()
 end
