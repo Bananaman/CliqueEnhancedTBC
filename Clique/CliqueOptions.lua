@@ -173,7 +173,7 @@ function Clique:ToggleSpellBookButtons()
     end
 end
 
-function Clique:Toggle()
+function Clique:Toggle(noSound)
     -- If we're in combat, refuse to toggle Clique, and instead just hide the frame if it's marked as shown.
     if InCombatLockdown() then
         if CliqueFrame and CliqueFrame:IsShown() then
@@ -191,6 +191,13 @@ function Clique:Toggle()
         CliqueFrame:Hide()
     else
         CliqueFrame:Show()
+    end
+
+    -- Play the soft "opening/closing the friends panel" Blizzard UI sounds.
+    -- NOTE: We only do this here during explicit toggling, rather than in OnHide/OnShow, since this addon does a lot
+    -- of hide/show trickery, and also because Clique auto-hides/shows whenever its parent spellbook frame is toggled.
+    if CliqueFrame and not noSound then
+        PlaySound(CliqueFrame:IsShown() and "igCharacterInfoTab" or "igMainMenuClose")
     end
 
     -- Toggle spellbook overlays based on Clique frame visibility, and update the list of bindings.
@@ -364,7 +371,7 @@ function Clique:CreateOptionsFrame()
 
     frame:SetScript("OnShow", function(self)
         if InCombatLockdown() then
-            Clique:Toggle()
+            Clique:Toggle(true) -- Silently close Clique's frame if it's somehow becoming visible in combat.
             return
         end
         Clique:FixFrameOrder()
@@ -381,7 +388,7 @@ function Clique:CreateOptionsFrame()
     CliqueFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     CliqueFrame:SetScript("OnEvent", function(self, event, ...)
         if self:IsShown() then
-            Clique:Toggle()
+            Clique:Toggle(true) -- Silently close Clique's frame when entering combat.
         end
     end)
 
