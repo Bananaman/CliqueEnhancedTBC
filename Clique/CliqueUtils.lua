@@ -1,3 +1,8 @@
+--[[---------------------------------------------------------------------------------
+  Clique by Cladhaire <cladhaire@gmail.com>
+  Clique Enhanced by VideoPlayerCode <https://github.com/VideoPlayerCode/CliqueEnhancedTBC>
+----------------------------------------------------------------------------------]]
+
 local IsAltKeyDown = IsAltKeyDown;
 local IsControlKeyDown = IsControlKeyDown;
 local IsShiftKeyDown = IsShiftKeyDown;

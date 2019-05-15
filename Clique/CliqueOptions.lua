@@ -1,3 +1,8 @@
+--[[---------------------------------------------------------------------------------
+  Clique by Cladhaire <cladhaire@gmail.com>
+  Clique Enhanced by VideoPlayerCode <https://github.com/VideoPlayerCode/CliqueEnhancedTBC>
+----------------------------------------------------------------------------------]]
+
 local genv = getfenv(0)
 local Clique = genv.Clique
 local L = Clique.Locals

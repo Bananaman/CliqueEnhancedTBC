@@ -1,5 +1,6 @@
 --[[---------------------------------------------------------------------------------
   Clique by Cladhaire <cladhaire@gmail.com>
+  Clique Enhanced by VideoPlayerCode <https://github.com/VideoPlayerCode/CliqueEnhancedTBC>
 ----------------------------------------------------------------------------------]]
 
 Clique = {Locals = {}}
