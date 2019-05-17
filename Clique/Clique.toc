@@ -1,6 +1,6 @@
 ## Interface: 20400
 ## Title: Clique Enhanced (TBC)
-## Version: TBC-143-1
+## Version: TBC-143-2
 ## Author: Cladhaire
 ## X-Additional-Authors: VideoPlayerCode (TBC Backporting & Enhancements)
 ## X-Website: https://github.com/VideoPlayerCode/CliqueEnhancedTBC
