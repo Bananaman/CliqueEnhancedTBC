@@ -208,9 +208,8 @@ function Clique:SpellBookButtonPressed(frame, button)
     if spellId > maxSpellId then return; end
 
     -- Now get the actual spell details.
-    local spellId = SpellBook_GetSpellID(frame:GetParent():GetID())
     local name, rank = GetSpellName(spellId, bookType) -- NOTE: Returns nil if spell doesn't exist.
-    if not name then return; end -- Abort if spell somehow didn't exist...
+    if not name then return; end -- Abort if spell still somehow didn't exist...
 
     -- Perform even more validation, by retrieving the spell's texture. If no texture exists, then it's an invalid spell slot ID despite checks above.
     local texture = GetSpellTexture(spellId, bookType); -- NOTE: Returns nil if spell doesn't exist.
